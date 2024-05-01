@@ -30,6 +30,8 @@ use App\Admin\Extensions\Nav\Dropdown;
 use App\Models\Utils;
 use Dflydev\DotAccessData\Util;
 
+//Utils::importFarmers(); 
+
 Admin::navbar(function (\Encore\Admin\Widgets\Navbar $navbar) {
 
     /*     $u = Auth::user();
@@ -87,3 +89,4 @@ Admin::css(url('/assets/css/bootstrap.css'));
 Admin::css('/assets/css/styles.css');
 //js https://cdn.jsdelivr.net/npm/chart.js
 Admin::js('https://cdn.jsdelivr.net/npm/chart.js');
+

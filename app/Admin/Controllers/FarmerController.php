@@ -11,6 +11,7 @@ use App\Models\Settings\Country;
 use App\Models\Settings\Language;
 use App\Models\Settings\Location;
 use App\Models\SubcountyModel;
+use App\Models\Utils;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -35,71 +36,84 @@ class FarmerController extends AdminController
     {
         $grid = new Grid(new Farmer());
 
-        $grid->column('farmer_group_id', __('Farmer group id'));
-        $grid->column('first_name', __('First name'));
-        $grid->column('last_name', __('Last name'));
-        $grid->column('country_id', __('Country id'));
-        $grid->column('language_id', __('Language id'));
-        $grid->column('national_id_number', __('National id number'));
-        $grid->column('gender', __('Gender'));
-        $grid->column('education_level', __('Education level'));
-        $grid->column('year_of_birth', __('Year of birth'));
-        $grid->column('phone', __('Phone'));
-        $grid->column('email', __('Email'));
-        $grid->column('is_your_phone', __('Is your phone'));
-        $grid->column('is_mm_registered', __('Is mm registered'));
-        $grid->column('other_economic_activity', __('Other economic activity'));
-        $grid->column('location_id', __('Location id'));
-        $grid->column('address', __('Address'));
-        $grid->column('latitude', __('Latitude'));
-        $grid->column('longitude', __('Longitude'));
-        $grid->column('password', __('Password'));
-        $grid->column('farming_scale', __('Farming scale'));
-        $grid->column('land_holding_in_acres', __('Land holding in acres'));
-        $grid->column('land_under_farming_in_acres', __('Land under farming in acres'));
-        $grid->column('ever_bought_insurance', __('Ever bought insurance'));
-        $grid->column('ever_received_credit', __('Ever received credit'));
-        $grid->column('status', __('Status'));
-        $grid->column('created_by_user_id', __('Created by user id'));
-        $grid->column('created_by_agent_id', __('Created by agent id'));
-        $grid->column('agent_id', __('Agent id'));
-        $grid->column('created_at', __('Created at'));
-        $grid->column('updated_at', __('Updated at'));
-        $grid->column('poverty_level', __('Poverty level'));
-        $grid->column('food_security_level', __('Food security level'));
-        $grid->column('marital_status', __('Marital status'));
-        $grid->column('family_size', __('Family size'));
-        $grid->column('farm_decision_role', __('Farm decision role'));
-        $grid->column('is_pwd', __('Is pwd'));
-        $grid->column('is_refugee', __('Is refugee'));
-        $grid->column('date_of_birth', __('Date of birth'));
-        $grid->column('age_group', __('Age group'));
-        $grid->column('language_preference', __('Language preference'));
-        $grid->column('phone_number', __('Phone number'));
-        $grid->column('phone_type', __('Phone type'));
-        $grid->column('preferred_info_type', __('Preferred info type'));
-        $grid->column('home_gps_latitude', __('Home gps latitude'));
-        $grid->column('home_gps_longitude', __('Home gps longitude'));
-        $grid->column('village', __('Village'));
-        $grid->column('street', __('Street'));
-        $grid->column('house_number', __('House number'));
-        $grid->column('land_registration_numbers', __('Land registration numbers'));
-        $grid->column('labor_force', __('Labor force'));
-        $grid->column('equipment_owned', __('Equipment owned'));
-        $grid->column('livestock', __('Livestock'));
-        $grid->column('crops_grown', __('Crops grown'));
-        $grid->column('has_bank_account', __('Has bank account'));
-        $grid->column('has_mobile_money_account', __('Has mobile money account'));
-        $grid->column('payments_or_transfers', __('Payments or transfers'));
-        $grid->column('financial_service_provider', __('Financial service provider'));
-        $grid->column('has_credit', __('Has credit'));
-        $grid->column('loan_size', __('Loan size'));
-        $grid->column('loan_usage', __('Loan usage'));
-        $grid->column('farm_business_plan', __('Farm business plan'));
-        $grid->column('covered_risks', __('Covered risks'));
-        $grid->column('insurance_company_name', __('Insurance company name'));
-        $grid->column('insurance_cost', __('Insurance cost'));
-        $grid->column('repaid_amount', __('Repaid amount'));
+        /* foreach (Farmer::all() as $key => $v) {
+            $numbers = explode('/', $v->phone);
+            if (isset($numbers[1])) {
+                $v->phone = Utils::prepare_phone_number($numbers[0]);
+                $v->phone_number = Utils::prepare_phone_number($numbers[1]);
+                if(!Utils::phone_number_is_valid($v->phone)){
+                    $v->phone = ($numbers[0]);
+                    $v->phone_number = ($numbers[1]);
+                }
+                $v->save();
+            }
+        } */
+
+        $grid->quickSearch('first_name', 'last_name')->placeholder("Search by name");
+        $grid->column('first_name', __('Name'))->display(function () {
+            return $this->first_name . ' ' . $this->last_name;
+        })->sortable();
+        $grid->column('gender', __('Gender'))
+            ->sortable()
+            ->filter([
+                'Male' => 'Male',
+                'Female' => 'Female',
+            ])->label([
+                'Male' => 'info',
+                'Female' => 'success',
+            ]);
+
+        $grid->column('education_level', __('Education Level'))
+            ->sortable()
+            ->filter([
+                'None' => 'None',
+                'Primary' => 'Primary',
+                'Secondary' => 'Secondary',
+                'Tertiary' => 'Tertiary',
+            ])->dot([
+                'None' => 'default',
+                'Primary' => 'info',
+                'Secondary' => 'warning',
+                'Tertiary' => 'success',
+            ]);
+        $grid->column('phone', __('Phone'))->sortable();
+        $grid->column('phone_number', __('phone_number'))->display(function () {
+            if ($this->phone_number == null || strlen($this->phone_number) < 3) {
+                return 'N/A';
+            }
+            return $this->phone_number;
+        })->sortable();
+        $grid->column('email', __('Email'))->display(function () {
+            if ($this->email == null || strlen($this->email) < 3) {
+                return 'N/A';
+            }
+            return $this->email;
+        })->sortable();
+
+
+        $grid->column('marital_status', __('Marital Status'))
+            ->sortable()
+            ->display(function ($f) {
+                if ($f == null || strlen($f) < 3) {
+                    return 'N/A';
+                }
+                return $f;
+            })->filter([
+                'Single' => 'Single',
+                'Married' => 'Married',
+                'Divorced' => 'Divorced',
+                'Widowed' => 'Widowed',
+            ])->dot([
+                'Single' => 'default',
+                'Married' => 'info',
+                'Divorced' => 'warning',
+                'Widowed' => 'success',
+            ]);
+
+        $grid->column('created_at', __('Registred'))
+            ->display(function ($f) {
+                return Utils::my_date($f);
+            })->sortable();
 
         return $grid;
     }

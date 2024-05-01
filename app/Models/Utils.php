@@ -874,4 +874,180 @@ administrator_id
         };
         return $data;
     }
+
+    //static function import farmers from csv
+    public static function importFarmers()
+    {
+        return;
+        $path = public_path('storage/files/farmers.csv');
+        //check if file exists
+        if (!file_exists($path)) {
+            dd("File not found");
+        }
+        $csv = new SplFileObject($path);
+        $csv->setFlags(SplFileObject::READ_CSV);
+        //$csv->setCsvControl(',');  //separator change if you need
+        set_time_limit(-1);
+        $isFirst = true;
+        $items = [];
+        foreach ($csv as $line) {
+            if ($isFirst) {
+                $isFirst = false;
+                continue;
+            }
+            $f = new Farmer();
+            $f->first_name = $line[1];
+            $f->last_name = $line[2];
+            $f->gender = $line[3];
+
+            if (trim($line[4]) == 'Secondary') {
+                $f->education_level = 'Secondary';
+            } else if (trim($line[4]) == 'Primary') {
+                $f->education_level = 'Primary';
+            } else if (trim($line[4]) == 'University') {
+                $f->education_level = 'University';
+            } else if (trim($line[4]) == 'Master') {
+                $f->education_level = 'Master';
+            } else if (trim($line[4]) == 'Bachelor') {
+                $f->education_level = 'Bachelors';
+            } else if (trim($line[4]) == 'Certificate') {
+                $f->education_level = 'Certificate';
+            } else if (trim($line[4]) == 'PhD') {
+                $f->education_level = 'PhD';
+            } else if (trim($line[4]) == 'Tetiary') {
+                $f->education_level = 'Tetiary';
+            } else if (trim($line[4]) == 'Diploma') {
+                $f->education_level = 'Diploma';
+            } else if (trim($line[4]) == 'Vocational') {
+                $f->education_level = 'Vocational';
+            } else if (trim($line[4]) == 'None') {
+                $f->education_level = 'None';
+            } else {
+                $f->education_level = 'None';
+            }
+            $f->phone = Utils::prepare_phone_number($line[5]);
+
+            //check if phone number is valid
+            if (!Utils::phone_number_is_valid($f->phone)) {
+                $f->phone = $line[5];
+            }
+            //check if $f->phone is empty and skip
+            if (empty($f->phone)) {
+                //CHECK IF USER WITH SAME FIRST AND LAST NAME EXISTS
+                $same_name = Farmer::where('first_name', $f->first_name)
+                    ->where('last_name', $f->last_name)
+                    ->first();
+                if ($same_name != null) {
+                    //echo "SKIP BECAUSE OF SAME NAME: => " . $f->id . ". " . $f->first_name . " " . $f->last_name . "<hr>";
+                    continue; 
+                }
+            }
+
+
+            $f->email = $line[6];
+            $f->address = $line[8];
+            $f->marital_status = $line[9];
+            $sub = Subcounty::where('name', trim($line[11]))->first();
+            if ($sub != null) {
+                $f->subcounty_id = $sub->id;
+                $f->district_id = $sub->district_id;
+            }
+            $f->livestock = $line[12];
+            if ($f->livestock != 'Yes') {
+                $f->livestock = 'No';
+            }
+
+            $same_phone = Farmer::where('phone', $f->phone)->first();
+            if ($same_phone != null) {
+               // echo "SKIP: => " . $f->id . ". " . $f->first_name . " " . $f->last_name . "<hr>";
+                continue;
+            }
+            $f->save();
+            echo "SAVE: => " . $f->id . ". " . $f->first_name . " " . $f->last_name . "<hr>";
+        }
+        die("--done--");
+        dd($items);
+        /*
+
+id	
+organisation_id	
+farmer_group_id	
+	
+country_id	
+language_id	
+national_id_number	
+	
+	
+year_of_birth	
+phone	
+	
+is_your_phone	
+is_mm_registered	
+other_economic_activity	
+location_id	
+	
+latitude	
+longitude	
+password	
+farming_scale	
+land_holding_in_acres	
+land_under_farming_in_acres	
+ever_bought_insurance	
+ever_received_credit	
+status	
+created_by_user_id	
+created_by_agent_id	
+agent_id	
+created_at	
+updated_at	
+poverty_level	
+food_security_level	
+	
+family_size	
+farm_decision_role	
+is_pwd	
+is_refugee	
+date_of_birth	
+age_group	
+language_preference	
+phone_number	
+phone_type	
+preferred_info_type	
+home_gps_latitude	
+home_gps_longitude	
+village	
+street	
+house_number	
+land_registration_numbers	
+labor_force	
+equipment_owned	
+	
+crops_grown	
+has_bank_account	
+has_mobile_money_account	
+payments_or_transfers	
+financial_service_provider	
+has_credit	
+loan_size	
+loan_usage	
+farm_business_plan	
+covered_risks	
+insurance_company_name	
+insurance_cost	
+repaid_amount	
+photo	
+	
+subcounty_id	
+parish_id	
+bank_id	
+other_livestock_count	
+poultry_count	
+sheep_count	
+goat_count	
+cattle_count	
+bank_account_number	
+has_receive_loan	
+	
+*/
+    }
 }

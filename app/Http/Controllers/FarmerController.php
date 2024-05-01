@@ -33,13 +33,18 @@ class FarmerController extends AdminController
     {
         $grid = new Grid(new Farmer());
 
-        $grid->column('farmer_group_id', __('Farmer group id'));
-        $grid->column('first_name', __('First name'));
-        $grid->column('last_name', __('Last name'));
-        $grid->column('country_id', __('Country id'));
-        $grid->column('language_id', __('Language id'));
-        $grid->column('national_id_number', __('National id number'));
-        $grid->column('gender', __('Gender'));
+        $grid->quickSearch('first_name','last_name')->placeholder("Search by name");
+        $grid->column('first_name', __('Name'))->display(function () {
+            return $this->first_name . ' ' . $this->last_name;
+        })->sortable();
+        $grid->column('gender', __('Gender'))
+            ->filter([
+                'Male' => 'Male',
+                'Female' => 'Female',
+            ])->label([
+                'Male' => 'info',
+                'Female' => 'success',
+            ])->sortable(); 
         $grid->column('education_level', __('Education level'));
         $grid->column('year_of_birth', __('Year of birth'));
         $grid->column('phone', __('Phone'));
@@ -289,6 +294,11 @@ class FarmerController extends AdminController
             'Primary' => 'Primary',
             'Secondary' => 'Secondary',
             'Tertiary' => 'Tertiary',
+            'University' => 'University',
+            'Postgraduate' => 'Postgraduate',
+            'Bachelor' => 'Bachelor',
+            'Masters' => 'Masters',
+            'Doctorate' => 'Doctorate',
         ])->rules('required');
         $form->email('email', __('Email Address'));
         $form->textarea('other_economic_activity', __('Economic activity'));
