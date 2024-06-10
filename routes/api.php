@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ApiAuthController;
 use App\Http\Controllers\ApiResurceController;
+use App\Http\Controllers\Apis\ChatController;
 use App\Http\Middleware\EnsureTokenIsValid;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\CropController;
@@ -29,7 +30,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::get("gardens", [ApiResurceController::class, "gardens"]);
     Route::get("financial-records", [ApiResurceController::class, "financial_records"]);
     Route::get("pests-and-disease-reports", [ApiResurceController::class, "pests_and_disease_reports"]);
-    Route::get('parishes', [ApiResurceController::class, 'parishes_2']); 
+    Route::get('parishes', [ApiResurceController::class, 'parishes_2']);
     Route::get('farmers', [ApiResurceController::class, 'farmers']);
     Route::get("garden-activities", [ApiResurceController::class, "garden_activities"]);
     Route::get("garden-activities", [ApiResurceController::class, "garden_activities"]);
@@ -38,6 +39,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::POST("financial-records", [ApiResurceController::class, "financial_records_cerate"]);
     Route::POST("products", [ApiResurceController::class, "product_create"]);
     Route::POST("garden-activities", [ApiResurceController::class, "activity_submit"]);
+    Route::apiResource('/chat', ChatController::class);
 });
 Route::get("crops", [ApiResurceController::class, "crops"]);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
