@@ -34,13 +34,13 @@ class GardenController extends AdminController
         $grid->filter(function($filter){
             //disable the default id filter
             $filter->disableIdFilter();
-            $filter->like('garden_name', 'Garden name');
+            $filter->like('name', 'Garden name');
         });
 
         //disable  column selector
         $grid->disableColumnSelector();
      
-        $grid->column('garden_name', __('Garden name'));
+        $grid->column('name', __('Garden name'));
         $grid->column('garden_size', __('Garden size(in acres)'));
         $grid->column('variety_id', __('Variety'))->display(function ($variety_id) {
             return GroundnutVariety::find($variety_id)->name;
@@ -61,13 +61,8 @@ class GardenController extends AdminController
     {
         $show = new Show(Garden::findOrFail($id));
 
-<<<<<<< HEAD
 
         $show->field('name', __('Garden name'));
-=======
-        
-        $show->field('garden_name', __('Garden name'));
->>>>>>> parent of 3a1bbcce (feat: Add lazy loading for images in GardenController grid view)
         $show->field('garden_size', __('Garden size(in acres)'));
         $show->field('ownership', __('Ownership of land'));
         $show->field('planting_date', __('Planting date'));
