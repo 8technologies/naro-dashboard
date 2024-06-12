@@ -34,7 +34,7 @@ class GardenActivityController extends AdminController
          $grid->filter(function($filter) use($user){
             //disable the default id filter
             $filter->disableIdFilter();
-            $filter->like('garden_id', 'Garden name')->select(Garden::where('user_id', $user->id)->pluck('garden_name', 'id'));
+            $filter->like('garden_id', 'Garden name')->select(Garden::where('user_id', $user->id)->pluck('name', 'id'));
         });
         
         //disable  column selector
@@ -42,7 +42,12 @@ class GardenActivityController extends AdminController
 
       
         $grid->column('garden_id', __('Garden'))->display(function ($garden_id) {
-            return \App\Models\Garden::find($garden_id)->garden_name;
+            $g = \App\Models\Garden::find($garden_id);
+            if($g == null)
+            {
+                return "No Garden";
+            } 
+            return \App\Models\Garden::find($garden_id)->name;
         });
         $grid->column('activity_category', __('Activity category'));
         $grid->column('person_responsible', __('Person responsible'));
@@ -62,7 +67,12 @@ class GardenActivityController extends AdminController
         $show = new Show(GardenActivity::findOrFail($id));
 
         $show->field('garden_id', __('Garden'))->as(function ($garden_id) {
-            return \App\Models\Garden::find($garden_id)->garden_name;
+            $g = \App\Models\Garden::find($garden_id);
+            if($g == null)
+            {
+                return "No Garden";
+            } 
+            return \App\Models\Garden::find($garden_id)->name;
         });
         $show->field('activity_category', __('Activity category'));
         $show->field('description', __('Description'));
@@ -99,7 +109,7 @@ class GardenActivityController extends AdminController
         });
 
         $form->select('garden_id', __('Garden')) 
-            ->options(Garden::where('user_id', $user->id)->pluck('garden_name', 'id'))
+            ->options(Garden::where('user_id', $user->id)->pluck('name', 'id'))
             ->required()->rules('required');
      
         $form->select('activity_category', __('Activity category'))->options([

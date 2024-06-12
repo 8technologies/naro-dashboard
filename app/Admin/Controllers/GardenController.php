@@ -61,8 +61,13 @@ class GardenController extends AdminController
     {
         $show = new Show(Garden::findOrFail($id));
 
+<<<<<<< HEAD
+
+        $show->field('name', __('Garden name'));
+=======
         
         $show->field('garden_name', __('Garden name'));
+>>>>>>> parent of 3a1bbcce (feat: Add lazy loading for images in GardenController grid view)
         $show->field('garden_size', __('Garden size(in acres)'));
         $show->field('ownership', __('Ownership of land'));
         $show->field('planting_date', __('Planting date'));
@@ -114,7 +119,7 @@ class GardenController extends AdminController
             return redirect('/gardens');
         });
 
-        $form->text('garden_name', __('Garden name'))->required();
+        $form->text('name', __('Garden name'))->required();
         $form->decimal('garden_size', __('Garden size(In Acres)'))->required();
         $form->text('ownership', __('Ownership of land'))->required();
         $form->date('planting_date', __('Planting date'))->required();

@@ -28,7 +28,6 @@ class Garden extends Model
         'crop_id',
     ];
 
-    //getter for garden_name
     public function getGardenNameAttribute()
     {
         return $this->name;

@@ -39,6 +39,6 @@ class FinancialRecord extends Model
         if ($this->garden == null) {
             return "No garden found.";
         }
-        return $this->garden->garden_name;
+        return $this->garden->name;
     }
 }

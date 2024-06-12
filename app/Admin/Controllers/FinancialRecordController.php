@@ -36,7 +36,7 @@ class FinancialRecordController extends AdminController
          $grid->filter(function($filter) use($user){
              //disable the default id filter
              $filter->disableIdFilter();
-/*              $filter->like('garden_id', 'Garden name')->select(Garden::where('user_id', $user->id)->pluck('garden_name', 'id')); */
+
          });
  
          //disable  column selector
@@ -72,7 +72,12 @@ class FinancialRecordController extends AdminController
 
     
         $show->field('garden_id', __('Garden'))->as(function ($garden_id) {
-            return \App\Models\Garden::find($garden_id)->garden_name;
+            $g = \App\Models\Garden::find($garden_id);
+            if($g == null)
+            {
+                return "Garden does not exist";
+            } 
+            return \App\Models\Garden::find($garden_id)->name;
         });
       
         $show->field('category', __('Category'));
@@ -116,7 +121,7 @@ class FinancialRecordController extends AdminController
         });
 
         $form->select('garden_id', __('Garden')) 
-        ->options(Garden::where('user_id', $user->id)->pluck('garden_name', 'id'))
+        ->options(Garden::where('user_id', $user->id)->pluck('name', 'id'))
         ->required()->rules('required');
      
         $form->select('category', __('Type of Transaction'))->options([
