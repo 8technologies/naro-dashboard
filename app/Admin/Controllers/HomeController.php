@@ -179,6 +179,7 @@ class HomeController extends Controller
             });
         });
 
+        return $content; 
         $content->row(function (Row $row) {
             $row->column(12, function (Column $column) {
                 $column->append(view('widgets.weather', []));
