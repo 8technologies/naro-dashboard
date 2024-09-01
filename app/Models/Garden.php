@@ -36,7 +36,21 @@ class Garden extends Model
     public static function boot()
     {
         parent::boot();
-        self::created(function ($m) {
+        self::creating(function ($m) {
+            $p = Parish::find($m->parish_id);
+            if ($p != null) {
+                $m->district_id = $p->district_id;
+                $m->subcounty_id = $p->subcounty_id;
+            }
+        });
+
+        //updaring
+        self::updating(function ($m) {
+            $p = Parish::find($m->parish_id);
+            if ($p != null) {
+                $m->district_id = $p->district_id;
+                $m->subcounty_id = $p->subcounty_id;
+            }
         });
     }
 
@@ -72,7 +86,7 @@ class Garden extends Model
     //belongs to variety_id
     public function variety()
     {
-        return $this->belongsTo(Crop::class,'crop_id');
+        return $this->belongsTo(Crop::class, 'crop_id');
     }
 
     //appends crop_text

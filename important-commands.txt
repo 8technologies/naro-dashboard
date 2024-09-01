@@ -65,7 +65,6 @@ php artisan admin:make ProductController --model=App\Models\Product
 php artisan admin:make ProductOrderController --model=App\Models\ProductOrder
 php artisan admin:make CropController --model=App\Models\Crop
 php artisan admin:make CropProtocolController --model=App\Models\CropProtocol
-php artisan admin:make GardenController --model=App\Models\Garden
 php artisan admin:make RegistrationController --model=App\Models\Registration
 php artisan admin:make DistrictController --model=App\\Models\\District
 php artisan admin:make PestsAndDiseaseReportController --model=App\\Models\\PestsAndDiseaseReport
@@ -118,9 +117,11 @@ php artisan make:model Garden
 php artisan make:model GardenActivity
 php artisan make:model District
 php artisan make:model PestsAndDiseaseReport -m
-php artisan make:model FinancialRecord -m
+php artisan make:model PestsAndDisease -m
 php artisan make:model ServiceProvider -m
 php artisan make:model ServiceProvider -m
 
 
 
+
+php artisan admin:make PestsAndDiseaseController --model=App\\Models\\PestsAndDisease

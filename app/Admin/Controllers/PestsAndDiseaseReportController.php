@@ -3,6 +3,7 @@
 namespace App\Admin\Controllers;
 
 use App\Models\PestsAndDiseaseReport;
+use App\Models\Utils;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -15,7 +16,7 @@ class PestsAndDiseaseReportController extends AdminController
      *
      * @var string
      */
-    protected $title = 'PestsAndDiseaseReport';
+    protected $title = 'Pests And Disease Reports';
 
     /**
      * Make a grid builder.
@@ -25,14 +26,44 @@ class PestsAndDiseaseReportController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new PestsAndDiseaseReport());
-
-        $grid->column('id', __('Id'));
-        $grid->column('created_at', __('Created at'));
-        $grid->column('updated_at', __('Updated at'));
-        $grid->column('pests_and_disease_id', __('Pests and disease id'));
-        $grid->column('garden_id', __('Garden id'));
-        $grid->column('crop_id', __('Crop id'));
-        $grid->column('user_id', __('User id'));
+        $grid->model()->orderBy('id', 'desc');
+        $grid->column('id', __('Sn'))->sortable();
+        $grid->column('created_at', __('Date'))->sortable()
+            ->display(function ($created_at) {
+                return Utils::my_date($created_at);
+            });
+        $grid->column('pests_and_disease_id', __('Pests/Disease'))
+            ->display(function ($pests_and_disease_id) {
+                $pestsAndDisease = \App\Models\PestsAndDisease::find($pests_and_disease_id);
+                if ($pestsAndDisease == null) {
+                    return 'Unknown';
+                }
+                return $pestsAndDisease->category;
+            })->sortable();
+        $grid->column('garden_id', __('Garden'))
+            ->display(function ($garden_id) {
+                $garden = \App\Models\Garden::find($garden_id);
+                if ($garden == null) {
+                    return 'Unknown';
+                }
+                return $garden->name;
+            })->sortable(); 
+        $grid->column('crop_id', __('Crop'))
+            ->display(function ($crop_id) {
+                $crop = \App\Models\Crop::find($crop_id);
+                if ($crop == null) {
+                    return 'Unknown';
+                }
+                return $crop->name;
+            })->sortable(); 
+        $grid->column('user_id', __('User'))
+            ->display(function ($user_id) {
+                $user = \App\Models\User::find($user_id);
+                if ($user == null) {
+                    return 'Unknown';
+                }
+                return $user->name;
+            })->sortable(); 
         $grid->column('district_id', __('District id'));
         $grid->column('subcounty_id', __('Subcounty id'));
         $grid->column('parish_id', __('Parish id'));
