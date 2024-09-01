@@ -13,6 +13,7 @@ return array(
     'App\\Admin\\Controllers\\FinancialRecordController' => $baseDir . '/app/Admin/Controllers/FinancialRecordController.php',
     'App\\Admin\\Controllers\\GardenActivityController' => $baseDir . '/app/Admin/Controllers/GardenActivityController.php',
     'App\\Admin\\Controllers\\GardenController' => $baseDir . '/app/Admin/Controllers/GardenController.php',
+    'App\\Admin\\Controllers\\GardenControllerOld' => $baseDir . '/app/Admin/Controllers/GardenControllerOld.php',
     'App\\Admin\\Controllers\\GenController' => $baseDir . '/app/Admin/Controllers/GenController.php',
     'App\\Admin\\Controllers\\GroundnutVarietyController' => $baseDir . '/app/Admin/Controllers/GroundnutVarietyController.php',
     'App\\Admin\\Controllers\\HomeController' => $baseDir . '/app/Admin/Controllers/HomeController.php',
