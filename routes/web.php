@@ -9,10 +9,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\PestAndDiseaseController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('policy', function () {
     return view('policy');
+});
+Route::get('migrate', function () {
+    //run laravel migrate command in code
+    $RESP = Artisan::call('migrate');
+    echo "<pre>";
+    print_r($RESP);
+    echo "</pre>";
+    die();
 });
 Route::get('app', function () {
     //redirec to url('naro-v3.apk');
