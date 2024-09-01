@@ -1,4 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <div class="card  mb-4 mb-md-5 border-0" style="color: black;">
     <!--begin::Header-->
     <div class="d-flex justify-content-between px-3 pt-2 px-md-4 border-bottom">

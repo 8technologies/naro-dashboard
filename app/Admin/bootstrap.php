@@ -27,6 +27,7 @@ use Encore\Admin\Facades\Admin;
 use Illuminate\Support\Facades\Auth;
 use App\Admin\Extensions\Nav\Shortcut;
 use App\Admin\Extensions\Nav\Dropdown;
+use App\Http\Controllers\ApiResurceController;
 use App\Models\Utils;
 use Dflydev\DotAccessData\Util;
 
@@ -88,5 +89,5 @@ Encore\Admin\Form::forget(['map', 'editor']);
 Admin::css(url('/assets/css/bootstrap.css'));
 Admin::css('/assets/css/styles.css');
 //js https://cdn.jsdelivr.net/npm/chart.js
-Admin::js('https://cdn.jsdelivr.net/npm/chart.js');
-
+/* Admin::js('https://cdn.jsdelivr.net/npm/chart.js'); */
+ApiResurceController::process_farmers_accounts();

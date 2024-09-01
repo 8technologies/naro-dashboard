@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Models\Crop;
 use App\Models\Garden;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
@@ -31,7 +32,7 @@ class GardenController extends AdminController
         $grid->model()->where('user_id', $user->id);
 
         //filter by garden name
-        $grid->filter(function($filter){
+        $grid->filter(function ($filter) {
             //disable the default id filter
             $filter->disableIdFilter();
             $filter->like('name', 'Garden name');
@@ -39,14 +40,18 @@ class GardenController extends AdminController
 
         //disable  column selector
         $grid->disableColumnSelector();
-     
+
         $grid->column('name', __('Garden name'));
         $grid->column('garden_size', __('Garden size(in acres)'));
-        $grid->column('variety_id', __('Variety'))->display(function ($variety_id) {
-            return GroundnutVariety::find($variety_id)->name;
+        $grid->column('crop_id', __('Variety'))->display(function ($variety_id) {
+            $var = Crop::find($variety_id);
+            if ($var == null) {
+                return $variety_id;
+            }
+            return $var->name;
         });
         $grid->column('seed_class', __('Seed class'));
- 
+
 
         return $grid;
     }
@@ -101,15 +106,12 @@ class GardenController extends AdminController
         $user = auth()->user();
 
         //When form is creating, assign user id
-        if ($form->isCreating()) 
-        {
+        if ($form->isCreating()) {
             $form->hidden('user_id')->default($user->id);
-
         }
 
-         //onsaved return to the list page
-         $form->saved(function (Form $form) 
-        {
+        //onsaved return to the list page
+        $form->saved(function (Form $form) {
             admin_toastr(__('Garden submitted successfully'), 'success');
             return redirect('/gardens');
         });
@@ -120,20 +122,21 @@ class GardenController extends AdminController
         $form->date('planting_date', __('Planting date'))->required();
         $form->date('harvest_date', __('Expected harvest date'))->required();
         $form->select('variety_id', __('Groundnut variety planted'))
-        ->options(GroundnutVariety::all()->pluck('name', 'id'))
-        ->required()->rules('required');
+            ->options(GroundnutVariety::all()->pluck('name', 'id'))
+            ->required()->rules('required');
         $form->text('seed_class', __('Seed class'))->required();
         $form->radioButton('certified_seller', __('Bougth from certified seller?'))
-        ->options(['1' => 'Yes', '0'=> 'No'])
-        ->when(
-            1, function (Form $form) {
-                $form->text('name_of_seller', __('Name of seller'))->required();
-                $form->text('seller_location', __('Seller location'))->required();
-                $form->text('seller_contact', __('Seller contact'))->rules('required|numeric');
-                $form->text('purpose_of_seller', __('Purpose of seller'));
-            }
-        )->required();
-      
+            ->options(['1' => 'Yes', '0' => 'No'])
+            ->when(
+                1,
+                function (Form $form) {
+                    $form->text('name_of_seller', __('Name of seller'))->required();
+                    $form->text('seller_location', __('Seller location'))->required();
+                    $form->text('seller_contact', __('Seller contact'))->rules('required|numeric');
+                    $form->text('purpose_of_seller', __('Purpose of seller'));
+                }
+            )->required();
+
         return $form;
     }
 }

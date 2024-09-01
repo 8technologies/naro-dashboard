@@ -11,6 +11,7 @@ use Encore\Admin\Facades\Admin;
 use Encore\Admin\Layout\Column;
 use Encore\Admin\Layout\Content;
 use App\Http\Controllers\QuestionController;
+use App\Models\Farmer;
 use App\Models\GroundnutVariety;
 use App\Models\PestsAndDiseaseReport;
 use App\Models\Product;
@@ -81,7 +82,7 @@ class HomeController extends Controller
                     'is_dark' => false,
                     'title' => 'Registered Farmers',
                     'sub_title' => 'All Farmers',
-                    'number' => number_format(User::count()),
+                    'number' => number_format(Farmer::count()),
                     'link' => admin_url('users')
                 ]));
             });
@@ -121,29 +122,7 @@ class HomeController extends Controller
                     'data' => $pests,
                 ]));
             });
-            $row->column(4, function (Column $column) {
-                $pests = PestsAndDiseaseReport::where([])->orderBy('created_at', 'desc')->limit(5)->get();
 
-                //get pests count order by top district_id count
-                $top_pests = PestsAndDiseaseReport::selectRaw('count(*) as count, district_id')
-                    ->groupBy('district_id')
-                    ->orderBy('count', 'desc')
-                    ->limit(5)
-                    ->get();
-                $counts = [];
-                $lables = [];
-                foreach ($top_pests as $key => $value) {
-                    $district = $value->district;
-                    $counts[] = $value->count;
-                    $lables[] = $district->name . " (" . $value->count . ")";
-                }
-
-                $column->append(view('widgets.pests', [
-                    'data' => $pests,
-                    'counts' => $counts,
-                    'lables' => $lables
-                ]));
-            });
             $row->column(4, function (Column $column) {
                 $top_pests = Garden::selectRaw('count(*) as count, crop_id')
                     ->groupBy('crop_id')
@@ -167,7 +146,30 @@ class HomeController extends Controller
                     'lables' => $lables
                 ]));
             });
-           
+
+            $row->column(4, function (Column $column) {
+                $pests = PestsAndDiseaseReport::where([])->orderBy('created_at', 'desc')->limit(5)->get();
+
+                //get pests count order by top district_id count
+                $top_pests = PestsAndDiseaseReport::selectRaw('count(*) as count, district_id')
+                    ->groupBy('district_id')
+                    ->orderBy('count', 'desc')
+                    ->limit(5)
+                    ->get();
+                $counts = [];
+                $lables = [];
+                foreach ($top_pests as $key => $value) {
+                    $district = $value->district;
+                    $counts[] = $value->count;
+                    $lables[] = $district->name . " (" . $value->count . ")";
+                }
+
+                $column->append(view('widgets.pests', [
+                    'data' => $pests,
+                    'counts' => $counts,
+                    'lables' => $lables
+                ]));
+            });
         });
 
         $content->row(function (Row $row) {
@@ -179,7 +181,7 @@ class HomeController extends Controller
             });
         });
 
-        return $content; 
+        return $content;
         $content->row(function (Row $row) {
             $row->column(12, function (Column $column) {
                 $column->append(view('widgets.weather', []));
