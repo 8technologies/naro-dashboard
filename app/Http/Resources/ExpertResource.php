@@ -4,7 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class MessageResource extends JsonResource
+class ExpertResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,11 +16,8 @@ class MessageResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'sender' => $this->sender,
-            'message' => $this->message,
-            'message_type' => $this->message_type,
-            'responded_by' => $this->responded_by,
-            'expert' => $this->responded_by === 'expert' ? new ExpertResource($this->expert) : null, // Add expert details if available
+            'name' => $this->name,
+            'email' => $this->email,
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }
