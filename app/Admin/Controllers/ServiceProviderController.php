@@ -29,7 +29,7 @@ class ServiceProviderController extends AdminController
         $grid->quickSearch();
         $grid->column('provider_name', __('Provider Name'))->sortable();
         $grid->column('business_name', __('Business name'))->sortable();
-        $grid->column('details', __('Details'));
+        $grid->column('details', __('Details'))->hide();
         $grid->column('services_offered', __('Services offered'));
         $grid->column('gps_lat', __('Gps lat'));
         $grid->column('gps_long', __('Gps long'));

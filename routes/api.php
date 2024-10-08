@@ -77,6 +77,7 @@ Route::get('products', [ApiResurceController::class, 'products']);
 Route::get('events', [ApiResurceController::class, 'events']);
 Route::get('news-posts', [ApiResurceController::class, 'news_posts']);
 Route::POST('farmers', [ApiResurceController::class, 'farmers_create']);
+Route::get('process-farmers-accounts', [ApiResurceController::class, 'process_farmers_accounts']);
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();

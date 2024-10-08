@@ -602,6 +602,7 @@ class ComposerStaticInitda89eef54c810448a827ed04bb3da82f
         'App\\Admin\\Controllers\\FinancialRecordController' => __DIR__ . '/../..' . '/app/Admin/Controllers/FinancialRecordController.php',
         'App\\Admin\\Controllers\\GardenActivityController' => __DIR__ . '/../..' . '/app/Admin/Controllers/GardenActivityController.php',
         'App\\Admin\\Controllers\\GardenController' => __DIR__ . '/../..' . '/app/Admin/Controllers/GardenController.php',
+        'App\\Admin\\Controllers\\GardenControllerOld' => __DIR__ . '/../..' . '/app/Admin/Controllers/GardenControllerOld.php',
         'App\\Admin\\Controllers\\GenController' => __DIR__ . '/../..' . '/app/Admin/Controllers/GenController.php',
         'App\\Admin\\Controllers\\GroundnutVarietyController' => __DIR__ . '/../..' . '/app/Admin/Controllers/GroundnutVarietyController.php',
         'App\\Admin\\Controllers\\HomeController' => __DIR__ . '/../..' . '/app/Admin/Controllers/HomeController.php',

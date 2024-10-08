@@ -715,6 +715,19 @@ class ApiResurceController extends Controller
         return $this->success(NewsPost::where([])->orderby('id', 'desc')->get(), 'Success');
     }
 
+    public static function process_farmers_accounts()
+    {
+        $unprocessed = Farmer::where(['has_user_account' => 'No'])->get();
+        foreach ($unprocessed as $key => $f) {
+            try {
+                $f->create_user_account();
+                //echo ("<br>success #" . $f->id);
+            } catch (\Throwable $t) {
+                //echo ("<br> $f->id Failed to create user account, because " . $t->getMessage() . "");
+            }
+            # code...
+        }
+    }
     public function farmers_create(Request $r)
     {
         $u = Administrator::find($r->user_id);

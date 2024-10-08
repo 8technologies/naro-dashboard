@@ -18,7 +18,7 @@ class CreateGardensTable extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('variety_id');
-            $table->string('garden_name')->nullable();
+            $table->string('name')->nullable();
             $table->string('garden_size')->nullable();
             $table->string('ownership')->nullable();
             $table->string('planting_date')->nullable();

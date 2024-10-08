@@ -3,19 +3,11 @@
 namespace App\Admin\Controllers;
 
 use App\Models\PestsAndDisease;
+use App\Models\User;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
-use Encore\Admin\Facades\Admin;
-use Illuminate\Http\UploadedFile;
-
-use App\Models\Crop;
-use App\Models\GroundnutVariety;
-//storage
-use Illuminate\Support\Facades\Storage;
-//getClientOriginalExtension
-
 
 class PestsAndDiseaseController extends AdminController
 {
@@ -24,7 +16,7 @@ class PestsAndDiseaseController extends AdminController
      *
      * @var string
      */
-    protected $title = 'PestsAndDisease';
+    protected $title = 'Pests and Disease';
 
     /**
      * Make a grid builder.
@@ -34,34 +26,16 @@ class PestsAndDiseaseController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new PestsAndDisease());
+        $grid->model()->orderBy('id', 'desc');
+        $grid->quickSearch();
+        $grid->column('id', __('Sn'))->sortable();
+        $grid->column('user_id', __('Owner'))->hide();
+        $grid->column('category', __('Name'))->sortable();
+        $grid->column('photo', __('Photo'))->image();
+        $grid->column('video', __('Video'))->hide();
+        $grid->column('audio', __('Audio'))->hide();
+        $grid->column('description', __('Description'))->hide();
 
-        //show a user only their gardens
-        $user = auth()->user();
-        if(!$user->isRole('administrator')){
-          $grid->model()->where('user_id', $user->id);
-        }
-        //filter by garden name
-        $grid->filter(function($filter) use($user){
-            //disable the default id filter
-            $filter->disableIdFilter();
-            $filter->like('category', 'Category');
-        });
-
-        //disable  column selector
-        $grid->disableColumnSelector();
-
-        //disable export
-        $grid->disableExport();
-
-        $grid->column('garden_location', __('Garden location'));
-        $grid->column('user_id', __('User'))->display(function($user_id) {
-            //return \App\Models\User::find($user_id)->name;
-        });
-        $grid->column('variety_id', __('Variety'))->display(function($variety_id) {
-            //return \App\Models\GroundnutVariety::find($variety_id)->name;
-        });
-        $grid->column('category', __('Category'));
-  
         return $grid;
     }
 
@@ -75,17 +49,14 @@ class PestsAndDiseaseController extends AdminController
     {
         $show = new Show(PestsAndDisease::findOrFail($id));
 
-        $show->field('garden_location', __('Garden location'));
-        $show->field('user_id', __('User id'))->as(function($user_id){
-            return \App\Models\User::find($user_id)->name;
-        });
-        $show->field('variety_id', __('Variety'))->as(function($variety_id){
-            return \App\Models\GroundnutVariety::find($variety_id)->name;
-        });
+        $show->field('id', __('Id'));
         $show->field('category', __('Category'));
-        $show->field('photo', __('Photo'))->image();
-        $show->field('video', __('Video'))->video();
-        $show->field('audio', __('Audio'))->audio();
+        $show->field('garden_location', __('Garden location'));
+        $show->field('user_id', __('User id'));
+        $show->field('variety_id', __('Variety id'));
+        $show->field('photo', __('Photo'));
+        $show->field('video', __('Video'));
+        $show->field('audio', __('Audio'));
         $show->field('description', __('Description'));
         $show->field('created_at', __('Created at'));
         $show->field('updated_at', __('Updated at'));
@@ -102,56 +73,15 @@ class PestsAndDiseaseController extends AdminController
     {
         $form = new Form(new PestsAndDisease());
 
-        $user = auth()->user();
+        /* $form->text('garden_location', __('Garden location'));
+        $form->number('user_id', __('User id'));
+        $form->number('variety_id', __('Variety id'));
+        $form->text('photo', __('Photo'));
+        $form->text('video', __('Video'));
+        $form->text('audio', __('Audio')); */
 
-        //When form is creating, assign user id
-        if ($form->isCreating()) 
-        {
-            $form->hidden('user_id')->default($user->id);
-
-        }
-
-         //onsaved return to the list page
-         $form->saved(function (Form $form) 
-        {
-            admin_toastr(__('Query submitted successfully'), 'success');
-            return redirect('/pests-and-diseases');
-        });
-
-
-
-     
-        //add a get gps coordinate button
-
-        $form->html('<button type="button" id="getLocationButton" style="background-color: darkgreen; color: white;">' . __('Get GPS Coordinates') . '</button>');
-
-
-        $form->text('garden_location', __('Garden location'))->attribute([
-            'id' => 'coordinates',   
-        ])->required();
-     
-        
-        //script to get the gps coordinates
-        Admin::script(<<<SCRIPT
-            document.getElementById('getLocationButton').addEventListener('click', function() {
-                if ("geolocation" in navigator) {
-                    navigator.geolocation.getCurrentPosition(function(position) {
-                        document.getElementById('coordinates').value = position.coords.latitude + ', ' + position.coords.longitude;
-                    });
-                } else {
-                    alert('Geolocation is not supported by your browser.');
-                }
-            });
-        SCRIPT);
-/*         $form->select('variety_id', __('Select crop variety '))->options(GroundnutVariety::pluck('name', 'id'))->rules('required'); */
-        $form->text('category', __('Select Inquiries category'))->options([
-            'Extension'=>'Extension',
-            'Query'=>'Query',
-        ]);
-        $form->file('photo', __('Photo'));
-        $form->file('video', __('Video'));
-        $form->file('audio', __('Audio'));
-
+        $form->text('category', __('name'))->rules('required');
+        $form->image('photo', __('Photo'))->rules('required');
         $form->quill('description', __('Description'));
 
         return $form;
