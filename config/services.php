@@ -30,4 +30,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // other services
+    'huggingface' => [
+        'token' => env('HUGGING_FACE_TOKEN'),
+    ],
+
 ];
