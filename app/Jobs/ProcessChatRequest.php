@@ -35,13 +35,23 @@ class ProcessChatRequest implements ShouldQueue
      */
     public function handle()
     {
+        // Check if an expert has already responded
+        $conversation = $this->message->conversation;
+        $expertResponseExists = $conversation->messages()->where('responded_by', 'expert')->exists();
+
+        if ($expertResponseExists) {
+            // An expert has already provided a response, so do not send to AI
+            return;
+        }
+
+        // Otherwise, process the AI response
         // Prepare the message text to send to the Hugging Face model
         $query = $this->message->message;
 
         // Call the Hugging Face model to get a response
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . config('services.huggingface.token')
-        ])->post('https://api-inference.huggingface.co/models/your_model', [
+        ])->post('https://api-inference.huggingface.co/models/TinyLlama/TinyLlama-1.1B-Chat-v1.0', [
                     'inputs' => $query,
                 ]);
 
@@ -52,7 +62,8 @@ class ProcessChatRequest implements ShouldQueue
         $this->message->conversation->messages()->create([
             'sender' => 'system',
             'message' => $responseText,
-            'message_type' => 'text'
+            'message_type' => 'text',
+            'responded_by' => 'system',
         ]);
 
         // Optionally, mark the conversation as closed if the response is sufficient
