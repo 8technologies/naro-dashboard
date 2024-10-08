@@ -3,19 +3,15 @@
 namespace App\Http\Controllers\Apis;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ConversationRequest;
+use App\Http\Resources\ConversationResource;
+use App\Jobs\ProcessChatRequest;
+use App\Models\Conversation;
 use Illuminate\Http\Request;
 
 class ChatController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -23,42 +19,29 @@ class ChatController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ConversationRequest $request)
     {
-        //
+        // Validated data
+        $validated = $request->validated();
+
+        // Create a new conversation or find an existing one
+        $conversation = Conversation::firstOrCreate([
+            'user_id' => $validated['user_id'],
+            'status' => 'open'
+        ]);
+
+        // Save the farmer's query in the database
+        $message = $conversation->messages()->create([
+            'sender' => 'farmer',
+            'message' => $validated['message'],
+            'message_type' => 'text'
+        ]);
+
+        // Dispatch the request to the queue for processing
+        ProcessChatRequest::dispatch($message);
+
+        // Return the formatted conversation resource
+        return new ConversationResource($conversation->load('messages'));
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
 }
