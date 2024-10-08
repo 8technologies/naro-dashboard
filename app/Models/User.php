@@ -7,7 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany as RelationsBelongsToMany;
 use Laravel\Sanctum\HasApiTokens;
-use Tymon\JWTAuth\Contracts\JWTSubject ;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Encore\Admin\Auth\Database\Administrator;
@@ -16,22 +16,22 @@ use Encore\Admin\Auth\Database\Administrator;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory; 
+    use HasFactory;
     use Notifiable;
- 
+
     protected $fillable = [
-            'first_name',
-            'last_name',
-            'middle_name',
-            'username',
-            'name',
-            'gender',
-            'email',
-            'phone_number',
-            'avatar',
-            'password',
-          
-    ];  
+        'first_name',
+        'last_name',
+        'middle_name',
+        'username',
+        'name',
+        'gender',
+        'email',
+        'phone_number',
+        'avatar',
+        'password',
+
+    ];
     protected $hidden = [
         'password',
         'remember_token',
@@ -45,17 +45,25 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-       //assign a user a role of 3 once they are registered
-       public static function boot()
-       {
-           parent::boot();
+    //assign a user a role of 3 once they are registered
+    public static function boot()
+    {
+        parent::boot();
 
-           static::created(function ($user) {
-               $user = Administrator::find($user->id);
-               $user->roles()->attach(3);
-           });
-       }
+        static::created(function ($user) {
+            $user = Administrator::find($user->id);
+            $user->roles()->attach(3);
+        });
+    }
 
 
-  
+    /**
+     * Get the user that owns the conversation.
+     */
+    public function conversations()
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
+
 }
