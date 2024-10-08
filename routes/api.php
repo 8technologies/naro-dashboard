@@ -39,7 +39,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::POST("financial-records", [ApiResurceController::class, "financial_records_cerate"]);
     Route::POST("products", [ApiResurceController::class, "product_create"]);
     Route::POST("garden-activities", [ApiResurceController::class, "activity_submit"]);
-    Route::apiResource('/chat', ChatController::class);
+    Route::apiResource('/chat', ChatController::class)->only(['store']);
 });
 Route::get("crops", [ApiResurceController::class, "crops"]);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
