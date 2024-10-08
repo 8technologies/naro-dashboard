@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiAuthController;
 use App\Http\Controllers\ApiResurceController;
 use App\Http\Controllers\Apis\ChatController;
+use App\Http\Controllers\Apis\ExpertController;
 use App\Http\Middleware\EnsureTokenIsValid;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\CropController;
@@ -39,7 +40,10 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::POST("financial-records", [ApiResurceController::class, "financial_records_cerate"]);
     Route::POST("products", [ApiResurceController::class, "product_create"]);
     Route::POST("garden-activities", [ApiResurceController::class, "activity_submit"]);
+
+    // AI Chatbot routes
     Route::apiResource('/chat', ChatController::class)->only(['store']);
+    Route::post('/expert/respond', [ExpertController::class, 'respondToQuery']);
 });
 Route::get("crops", [ApiResurceController::class, "crops"]);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
