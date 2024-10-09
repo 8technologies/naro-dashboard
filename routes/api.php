@@ -43,6 +43,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
 
     // AI Chatbot routes
     Route::apiResource('/chat', ChatController::class)->only(['store']);
+    Route::get('/chat/{conversationId}/response', [ChatController::class, 'getChatResponse']);
     Route::post('/expert/respond', [ExpertController::class, 'respondToQuery']);
 });
 Route::get("crops", [ApiResurceController::class, "crops"]);
