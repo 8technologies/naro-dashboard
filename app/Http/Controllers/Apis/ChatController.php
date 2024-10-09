@@ -40,8 +40,29 @@ class ChatController extends Controller
         // Dispatch the request to the queue for processing
         ProcessChatRequest::dispatch($message);
 
-        // Return the formatted conversation resource
-        return new ConversationResource($conversation->load('messages'));
+        // Return the conversation ID so the client can poll for updates
+        return response()->json([
+            'status' => 'processing',
+            'message' => 'Your query is being processed.',
+            'conversation_id' => $conversation->id
+        ], 202);
+    }
+
+    public function getChatResponse($conversationId)
+    {
+        // Find the conversation and load the messages
+        $conversation = Conversation::with('messages')->findOrFail($conversationId);
+
+        // Check if the conversation is still processing
+        if ($conversation->status === 'open') {
+            return response()->json([
+                'status' => 'processing',
+                'message' => 'Your query is still being processed.',
+            ], 200);
+        }
+
+        // Return the conversation with messages if processing is complete
+        return new ConversationResource($conversation);
     }
 
 }
