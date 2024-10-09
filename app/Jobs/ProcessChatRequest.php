@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ProcessChatRequest implements ShouldQueue
 {
@@ -54,6 +55,8 @@ class ProcessChatRequest implements ShouldQueue
         ])->post('https://api-inference.huggingface.co/models/TinyLlama/TinyLlama-1.1B-Chat-v1.0', [
                     'inputs' => $query,
                 ]);
+
+        Log::info($response->json());
 
         // Parse the AI response
         $responseText = $response->json()[0]['generated_text'] ?? 'No response available';
