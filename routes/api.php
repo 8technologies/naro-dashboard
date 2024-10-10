@@ -42,10 +42,27 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
     Route::POST("garden-activities", [ApiResurceController::class, "activity_submit"]);
 
     // AI Chatbot routes
-    Route::apiResource('/chat', ChatController::class)->only(['store']);
-    Route::get('/chat/{conversationId}/response', [ChatController::class, 'getChatResponse']);
+    // Route group for conversations
+    Route::prefix('conversations')->group(function () {
+        // Fetch all conversations for a user
+        Route::get('/', [ChatController::class, 'getUserConversations']);
+
+        // Send a message to an existing conversation
+        Route::post('{conversation}/send', [ChatController::class, 'sendMessage']);
+
+        // Fetch the response for a specific conversation
+        Route::get('{conversationId}/response', [ChatController::class, 'getChatResponse']);
+    });
+
+    // Route for starting a new conversation
+    Route::post('/chat', [ChatController::class, 'store']);
+
+    // Route for expert response
     Route::post('/expert/respond', [ExpertController::class, 'respondToQuery']);
+
+
 });
+
 Route::get("crops", [ApiResurceController::class, "crops"]);
 Route::POST("users/login", [ApiAuthController::class, "login"]);
 Route::POST("users/register", [ApiAuthController::class, "register"]);
@@ -54,15 +71,6 @@ Route::resource('registration', RegistrationController::class);
 //Route::resource('gardens', GardenController::class);
 Route::resource('garden_activities', GardenActivityController::class);
 Route::resource('questions', QuestionAnswerController::class);
-
-
-
-
-
-
-
-
-
 
 
 
