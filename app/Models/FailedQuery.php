@@ -9,6 +9,8 @@ class FailedQuery extends Model
 {
     use HasFactory;
 
+    protected $table = 'failed_queries';
+
     protected $fillable = [
         'conversation_id',
         'message',
