@@ -77,12 +77,16 @@ class ChatController extends Controller
      * @param \App\Models\Conversation $conversation
      * @return mixed|\Illuminate\Http\JsonResponse
      */
-    public function sendMessage(Request $request, Conversation $conversation)
+    public function sendMessage(Request $request)
     {
         // Validate the request body
         $validated = $request->validate([
+            'conversation_id' => 'required|integer|exists:conversations,id',
             'message' => 'required|string',
         ]);
+
+        // Find the conversation by ID
+        $conversation = Conversation::findOrFail($validated['conversation_id']);
 
         // Create the new message in the conversation
         $message = $conversation->messages()->create([

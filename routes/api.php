@@ -48,7 +48,7 @@ Route::middleware([EnsureTokenIsValid::class])->group(function () {
         Route::get('/', [ChatController::class, 'getUserConversations']);
 
         // Send a message to an existing conversation
-        Route::post('{conversation}/send', [ChatController::class, 'sendMessage']);
+        Route::post('/send', [ChatController::class, 'sendMessage']);
 
         // Fetch the response for a specific conversation
         Route::get('{conversationId}/response', [ChatController::class, 'getChatResponse']);
