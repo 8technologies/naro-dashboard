@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Models\Message;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -17,7 +16,6 @@ class ProcessChatRequest implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $message;
-
 
     /**
      * Create a new job instance.
@@ -46,31 +44,49 @@ class ProcessChatRequest implements ShouldQueue
         }
 
         // Otherwise, process the AI response
-        // Prepare the message text to send to the Hugging Face model
         $query = $this->message->message;
 
-        // Call the Hugging Face model to get a response
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . config('services.huggingface.token')
-        ])->post('https://api-inference.huggingface.co/models/TinyLlama/TinyLlama-1.1B-Chat-v1.0', [
-                    'inputs' => $query,
-                ]);
+        // Define the system prompt
+        $systemPrompt = "You are an expert farmer specializing in groundnut cultivation. "
+            . "You provide detailed, practical, and region-specific advice to farmers, focusing on the best practices for growing, "
+            . "maintaining, and harvesting groundnuts. You are knowledgeable about groundnut varieties, optimal planting times, pest and disease control methods, "
+            . "soil preparation, and yield improvement techniques. Be clear, concise, and friendly, while ensuring the advice is applicable to real-world farming scenarios.";
 
-        Log::info($response->json());
+        // Combine the system prompt with the user's question
+        $prompt = $systemPrompt . "\n\nFarmer's question: " . $query;
 
-        // Parse the AI response
-        $responseText = $response->json()[0]['generated_text'] ?? 'No response available';
+        try {
+            // Make the HTTP POST request to OpenAI's v1/completions endpoint
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . config('services.openai.key')
+            ])->post('https://api.openai.com/v1/completions', [
+                        'model' => 'ft:babbage-002:personal:naro:AIA9hcCa', // Your fine-tuned model
+                        'prompt' => $prompt,
+                        'max_tokens' => 150,  // Adjust token limit based on expected response length
+                        'temperature' => 0.3, // Lower temperature for more precise and focused answers
+                    ]);
+
+            // Log the response for debugging
+            Log::info($response->json());
+
+            // Parse the AI response
+            $responseText = $response->json()['choices'][0]['text'] ?? 'No response available';
+
+        } catch (\Exception $e) {
+            // Handle API error
+            Log::error('Error calling OpenAI API: ' . $e->getMessage());
+            $responseText = 'There was an error processing your request. Please try again later.';
+        }
 
         // Store the system's response as a message
         $this->message->conversation->messages()->create([
             'sender' => 'system',
-            'message' => $responseText,
+            'message' => trim($responseText),
             'message_type' => 'text',
             'responded_by' => 'system',
         ]);
 
         // Optionally, mark the conversation as closed if the response is sufficient
         $this->message->conversation->update(['status' => 'closed']);
-
     }
 }
