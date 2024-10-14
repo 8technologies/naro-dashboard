@@ -9,6 +9,7 @@ use App\Http\Resources\MessageResource;
 use App\Jobs\ProcessChatRequest;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
@@ -85,22 +86,36 @@ class ChatController extends Controller
             'message' => 'required|string',
         ]);
 
-        // Find the conversation by ID
-        $conversation = Conversation::findOrFail($validated['conversation_id']);
+        try {
+            // Find the conversation by ID
+            $conversation = Conversation::findOrFail($validated['conversation_id']);
 
-        // Create the new message in the conversation
-        $message = $conversation->messages()->create([
-            'sender' => 'farmer', // Assuming 'farmer' is the sender
-            'message' => $validated['message'],
-            'message_type' => 'text', // Can be modified to handle different types (e.g., images, etc.)
-        ]);
+            // Create the new message in the conversation
+            $message = $conversation->messages()->create([
+                'sender' => 'farmer', // Assuming 'farmer' is the sender
+                'message' => $validated['message'],
+                'message_type' => 'text', // Can be modified to handle different types (e.g., images, etc.)
+            ]);
 
-        // Return the newly created message as a resource
-        return response()->json([
-            'message' => 'Message sent successfully',
-            'data' => new MessageResource($message),
-        ], 201);
+            // Dispatch the AI processing job for the new message
+            ProcessChatRequest::dispatch($message);
+
+            // Return the newly created message as a resource
+            return response()->json([
+                'message' => 'Message sent successfully and is being processed by the AI.',
+                'data' => new MessageResource($message),
+            ], 201);
+
+        } catch (\Exception $e) {
+            // Handle potential errors and log the issue
+            Log::error('Error in sending message: ' . $e->getMessage());
+
+            return response()->json([
+                'error' => 'An error occurred while sending the message. Please try again.'
+            ], 500);
+        }
     }
+
 
     public function getChatResponse($conversationId)
     {
