@@ -35,4 +35,8 @@ return [
         'token' => env('HUGGING_FACE_TOKEN'),
     ],
 
+    'openai' => [
+        'key' => env('OPENAI_KEY'),
+    ],
+
 ];
