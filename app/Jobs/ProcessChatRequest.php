@@ -59,18 +59,21 @@ class ProcessChatRequest implements ShouldQueue
             // Make the HTTP POST request to OpenAI's v1/completions endpoint
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . config('services.openai.key')
-            ])->post('https://api.openai.com/v1/completions', [
-                        'model' => 'ft:babbage-002:personal:naro:AIA9hcCa', // Your fine-tuned model
-                        'prompt' => $prompt,
-                        'max_tokens' => 150,  // Adjust token limit based on expected response length
-                        'temperature' => 0.3, // Lower temperature for more precise and focused answers
+            ])->post('https://api.openai.com/v1/chat/completions', [
+                        'model' => 'ft:gpt-4o-mini-2024-07-18:personal:naro-ai-chatbot:AKYFpcVK', // Your fine-tuned model
+                        'messages' => [
+                            ['role' => 'system', 'content' => $systemPrompt],
+                            ['role' => 'user', 'content' => $query],
+                        ],
+                        // 'max_tokens' => 150,  // Adjust token limit based on expected response length
+                        // 'temperature' => 0.3, // Lower temperature for more precise and focused answers
                     ]);
 
             // Log the response for debugging
             Log::info($response->json());
 
             // Parse the AI response
-            $responseText = $response->json()['choices'][0]['text'] ?? 'No response available';
+            $responseText = $response->json()['choices'][0]['message']['content'] ?? 'No response available';
 
         } catch (\Exception $e) {
             // Handle API error
