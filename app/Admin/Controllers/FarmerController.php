@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Models\District;
 use App\Models\DistrictModel;
 use App\Models\Farmer;
 use App\Models\FinancialInstitution;
@@ -49,6 +50,7 @@ class FarmerController extends AdminController
             }
         } */
 
+        $grid->model()->orderBy('id', 'desc');
         $grid->quickSearch('first_name', 'last_name')->placeholder("Search by name");
         $grid->column('first_name', __('Name'))->display(function () {
             return $this->first_name . ' ' . $this->last_name;
@@ -77,18 +79,42 @@ class FarmerController extends AdminController
                 'Tertiary' => 'success',
             ]);
         $grid->column('phone', __('Phone'))->sortable();
-        $grid->column('phone_number', __('phone_number'))->display(function () {
-            if ($this->phone_number == null || strlen($this->phone_number) < 3) {
-                return 'N/A';
-            }
-            return $this->phone_number;
-        })->sortable();
+        
         $grid->column('email', __('Email'))->display(function () {
             if ($this->email == null || strlen($this->email) < 3) {
                 return 'N/A';
             }
             return $this->email;
         })->sortable();
+
+        //district_id
+        $grid->column('district_id', __('District'))
+            ->display(function ($f) {
+                if ($f == null || strlen($f) < 3) {
+                    return 'N/A';
+                }
+                $district = District::find($f);
+                if ($district) {
+                    return $district->name;
+                }
+                return 'N/A';
+            })->sortable()->hide(); 
+
+        //has_smart_phone
+        $grid->column('has_smart_phone', __('Has Smart Phone'))
+            ->display(function ($f) {
+                if ($f == null || strlen($f) < 3) {
+                    return 'N/A';
+                }
+                return $f;
+            })->sortable()
+            ->filter([
+                'Yes' => 'Yes',
+                'No' => 'No',
+            ])->dot([
+                'Yes' => 'success',
+                'No' => 'default',
+            ]); 
 
 
         $grid->column('marital_status', __('Marital Status'))
