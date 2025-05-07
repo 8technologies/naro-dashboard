@@ -24,12 +24,20 @@ class Farmer extends Model
 
         //created
         static::created(function ($farmer) {
-            $farmer->create_user_account();
+            try {
+                $farmer->create_user_account();
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         });
 
         //updating
         static::updating(function ($farmer) {
-            $farmer = self::prepareData($farmer);
+            try {
+                $farmer = self::prepareData($farmer); 
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
             return $farmer;
         });
     }
