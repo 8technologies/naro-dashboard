@@ -11,13 +11,14 @@ use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\PestAndDiseaseController;
 use App\Models\District;
 use App\Models\Farmer;
+use App\Models\ServiceProvider;
 use App\Models\Subcounty;
 use App\Models\Utils;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('import-data', function () {
-    $file = public_path('storage/FARMERS.csv');
+    $file = public_path('storage/SERVICE-PROVIDES.csv');
     //check if file exists
     if (!file_exists($file)) {
         dd('File not found');
@@ -60,17 +61,7 @@ Route::get('import-data', function () {
     if (count($data[0]) < 2) {
         dd('File is not valid');
     }
-    /*    
-    3 => "Gender"
-    4 => "Education level"
-    5 => "Phone"
-    6 => "Email"
-    7 => "Is smartphone?"
-    8 => "Address"
-    9 => "Marital status"
-    10 => "District"
-    11 => "Subcounty"
-    12 => "Does livestock?" */
+
     foreach ($data as $key => $value) {
         //skip the first row
         if ($key == 0) {
@@ -101,9 +92,79 @@ Route::get('import-data', function () {
         if ($phone_number_1 != null) {
             $conds['phone_number'] = $phone_number_1;
         }
-
         $first_name = trim($value[1]);
         $last_name = trim($value[2]);
+        
+        if ($first_name != null && strlen($first_name) > 2) {
+            $conds['provider_name'] = $first_name;
+        }
+        
+        if ($last_name != null && strlen($last_name) > 2) {
+            $conds['business_name'] = $last_name;
+        }
+        if ($phone_number_1 != null && strlen($phone_number_1) > 2) {
+            $conds['phone_number'] = $phone_number_1;
+        }
+        if ($phone_number_2 != null && strlen($phone_number_2) > 2) {
+            $conds['phone_number'] = $phone_number_2;
+        }
+        if ($phone_number_1 != null && strlen($phone_number_1) > 2) {
+            $conds['phone_number'] = $phone_number_1;
+        }
+
+        $provider = ServiceProvider::where($conds)->first();
+
+        if ($provider == null) {
+            $provider = new ServiceProvider();
+        }
+        $provider->provider_name = $first_name;
+        $provider->business_name = $last_name;
+        $provider->phone_number = $phone_number_1;
+        $provider->phone_number_2 = $phone_number_2;
+        $provider->details = $value[7] . ', ' . $value[8] . '.';
+        $provider->services_offered = $value[3];
+        $provider->gps_lat = $value[4];
+        $provider->gps_long = $value[5];
+        $provider->services_offered = $value[6];
+        $provider->photo = null;
+        $provider->save();
+        echo $provider->id . '. - ' . $provider->provider_name . ' ' . $provider->business_name . '<br>';
+        continue;
+
+        dd($provider);
+        dd($phone_number_1);
+
+        /*    
+ 
+    "" => "images/logo.png"
+
+
+    "" => "gona@mailinator.com"
+
+
+
+      0 => "Omia Agribusinesss and Development Group Ltd"
+  1 => "Omia Agribusiness"
+  2 => "Agro Inputs, Extension Services"
+  3 => ""
+  4 => ""
+  5 => "786584336"
+  6 => "773628770"
+  7 => "Arua"
+  8 => "City, Town, Municipal"
+  --
+0 => "Service Provider Name"
+1 => "Businness name"
+2 => "Services Offered"
+3 => "GPS Latitude"
+4 => "GPS Longtude"
+5 => "Phone No. 1"
+6 => "Phone No. 2"
+7 => "District"
+8 => "Subcounty"
+  
+  */
+
         $gender = trim($value[3]);
         $education_level = trim($value[4]);
         $is_smartphone = trim($value[7]);
@@ -131,7 +192,7 @@ Route::get('import-data', function () {
         if ($gender != null && strlen($gender) > 2) {
             $conds['gender'] = $gender;
         }
- 
+
         $farmer = Farmer::where($conds)->first();
         if ($farmer == null) {
             $farmer = new Farmer();
@@ -165,7 +226,7 @@ Route::get('import-data', function () {
                 }
             }
         }
-        if($_sub != null){
+        if ($_sub != null) {
             $farmer->subcounty_id = $_sub->id;
         }
         $farmer->farmer_group_id = null;
@@ -173,8 +234,7 @@ Route::get('import-data', function () {
         $farmer->phone_number = $phone_number_1;
         $farmer->save();
 
-        echo $farmer->id.'. - ' . $farmer->first_name . ' ' . $farmer->last_name . '<br>';
-
+        echo $farmer->id . '. - ' . $farmer->first_name . ' ' . $farmer->last_name . '<br>';
     }
 
     /* 
