@@ -99,6 +99,7 @@ class ApiAuthController extends Controller
         if ($token == null) {
             $u->password = password_hash(trim($r->password), PASSWORD_DEFAULT);
             try {
+                //if password is not set, set it
                 $u->save();
             } catch (\Exception $e) {
                 return $this->error('Failed to login. Please try again.');
