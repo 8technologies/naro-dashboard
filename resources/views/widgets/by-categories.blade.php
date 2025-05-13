@@ -1,5 +1,14 @@
+<style>
+    .my-card-3 {
+        /* border to left side only */
+        border: 0;
+        border-left: 9px solid transparent;
+        border-radius: 0rem;
+        border-top: #ff0000 5px solid !important;
+    }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<div class="card  mb-4 mb-md-5 border-0" style="color: black;">
+<div class="card  mb-4 mb-md-5 border-0 my-card-3" style="color: black;">
     <!--begin::Header-->
     <div class="d-flex justify-content-between px-3 pt-2 px-md-4 border-bottom">
         <h4 style="line-height: 1; margrin: 0; " class="fs-22 fw-800">

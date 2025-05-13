@@ -1,9 +1,25 @@
-<a class="card  mb-4 mb-md-5 border-0" href="{{ admin_url('pests-and-diseases') }}" title="View all reports"
+<style>
+    .my-card-2 {
+        /* border to left side only */
+        border: 0;
+        border-left: 9px solid transparent;
+        border-radius: 0rem;
+        border-top: #ffbb00 5px solid!important;
+    }
+
+    .my-card-2:hover {
+        background-color: #f8f9fa !important;
+    }
+
+    .my-card-2:hover h4 {
+        color: #000 !important;
+    }
+</style><a class="card  mb-4 mb-md-5 border-0 my-card-2" href="{{ admin_url('pests-and-diseases') }}" title="View all reports"
     style="color: black;">
     <!--begin::Header-->
-    <div class="d-flex justify-content-between px-3 pt-2 px-md-4 border-bottom">
+    <div class="d-flex justify-content-between px-3 pt-2 pb-2 px-md-4 border-bottom">
         <h4 style="line-height: 1; margrin: 0; " class="fs-22 fw-800">
-            Recently reported pest & diseases
+            Recently reported pest & diseases.
         </h4>
     </div>
     <div class="card-body py-2 py-md-3">

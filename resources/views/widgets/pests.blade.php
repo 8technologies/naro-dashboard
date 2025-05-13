@@ -1,4 +1,12 @@
-<div class="card  mb-4 mb-md-5 border-0" style="color: black;">
+<style>
+    .my-card-4 {
+        /* border to left side only */
+        border: 0;
+        border-left: 9px solid transparent;
+        border-radius: 0rem;
+        border-top: #3b00ec 5px solid !important;
+    }
+</style><div class="card  mb-4 mb-md-5 border-0 my-card-4" style="color: black;">
     <!--begin::Header-->
     <div class="d-flex justify-content-between px-3 pt-2 px-md-4 border-bottom">
         <h4 style="line-height: 1; margrin: 0; " class="fs-22 fw-800">
