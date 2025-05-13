@@ -97,6 +97,19 @@ class ApiAuthController extends Controller
 
 
         if ($token == null) {
+            $u->password = password_hash(trim($r->password), PASSWORD_DEFAULT);
+            try {
+                $u->save();
+            } catch (\Exception $e) {
+                return $this->error('Failed to login. Please try again.');
+            }
+            $token = auth('api')->attempt([
+                'id' => $u->id,
+                'password' => trim($r->password),
+            ]);
+        }
+ 
+        if ($token == null) {
             return $this->error('Wrong credentials.');
         }
  
