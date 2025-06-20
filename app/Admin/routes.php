@@ -13,6 +13,7 @@ Route::group([
 ], function (Router $router) {
 
     $router->get('/', 'HomeController@index')->name('home');
+    $router->get('gardens-map', 'HomeController@gardens_map')->name('gardens_map');
     $router->get('questions', 'HomeController@questions')->name('questions');
     $router->get('question_answers/{id}', 'HomeController@answers')->name('question_answers');
     $router->resource('gens', GenController::class);

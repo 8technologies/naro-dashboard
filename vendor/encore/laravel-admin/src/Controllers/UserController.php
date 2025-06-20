@@ -2,6 +2,7 @@
 
 namespace Encore\Admin\Controllers;
 
+use App\Models\User; // It's better to use your actual User model.
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
@@ -14,7 +15,7 @@ class UserController extends AdminController
      */
     protected function title()
     {
-        return trans('admin.administrator');
+        return 'Users'; // Changed to a more generic title
     }
 
     /**
@@ -24,17 +25,63 @@ class UserController extends AdminController
      */
     protected function grid()
     {
-        $userModel = config('admin.database.users_model');
-
+        $userModel = config('admin.database.users_model', User::class);
         $grid = new Grid(new $userModel());
+        $grid->model()->orderBy('id', 'desc');
 
-        $grid->column('id', 'ID')->sortable();
-        $grid->column('username', trans('admin.username'));
-        $grid->column('name', trans('admin.name'));
-        $grid->column('roles', trans('admin.roles'))->pluck('name')->label();
-        $grid->column('created_at', trans('admin.created_at'));
-        $grid->column('updated_at', trans('admin.updated_at'));
+        // ======== GRID SEARCH & FILTERS ========
+        $grid->quickSearch(['name', 'username', 'email'])->placeholder('Search by Name, Username, or Email...');
 
+        $grid->filter(function ($filter) {
+            // Remove the default id filter
+            $filter->disableIdFilter();
+
+            $filter->column(1 / 2, function ($filter) {
+                $filter->like('name', 'Name');
+                $filter->like('username', 'Username');
+            });
+
+            $filter->column(1 / 2, function ($filter) {
+                $filter->like('email', 'Email');
+                $filter->equal('gender', 'Gender')->select([
+                    'male'   => 'Male',
+                    'female' => 'Female',
+                ]);
+            });
+            
+            $roleModel = config('admin.database.roles_model');
+            $filter->where(function ($query) {
+                $query->whereHas('roles', function ($query) {
+                    $query->whereIn('id', $this->input);
+                });
+            }, 'Roles', 'roles')->multipleSelect($roleModel::all()->pluck('name', 'id'));
+
+
+            $filter->between('created_at', 'Created At')->date();
+        });
+
+
+        // ======== GRID COLUMNS ========
+        $grid->column('id', 'ID')->sortable()->width(50);
+
+        // FIX: Removed the ->rounded() method call which was causing the error.
+        $grid->column('avatar', 'Avatar')->image('', 60, 60);
+
+        $grid->column('name', 'Full Name')->sortable();
+        $grid->column('username', 'Username')->sortable();
+
+        $grid->column('Contact Info')->display(function () {
+            return "{$this->email}<br>{$this->phone_number}";
+        });
+
+        $grid->column('roles', 'Roles')->pluck('name')->label('primary');
+
+        $grid->column('created_at', 'Joined At')->display(function ($createdAt) {
+            return $createdAt ? date('M d, Y', strtotime($createdAt)) : 'N/A';
+        })->sortable();
+
+
+        // ======== GRID ACTIONS ========
         $grid->actions(function (Grid\Displayers\Actions $actions) {
             if ($actions->getKey() == 1) {
                 $actions->disableDelete();
@@ -54,26 +101,41 @@ class UserController extends AdminController
      * Make a show builder.
      *
      * @param mixed $id
-     *
      * @return Show
      */
     protected function detail($id)
     {
-        $userModel = config('admin.database.users_model');
-
+        $userModel = config('admin.database.users_model', User::class);
         $show = new Show($userModel::findOrFail($id));
 
-        $show->field('id', 'ID');
-        $show->field('username', trans('admin.username'));
-        $show->field('name', trans('admin.name'));
-        $show->field('roles', trans('admin.roles'))->as(function ($roles) {
+        $show->panel()->tools(function ($tools) {
+            $tools->disableDelete();
+        });
+
+        $show->divider('User Profile');
+
+        $show->field('avatar', 'Avatar')->image('', 120, 120);
+        
+        $show->field('id', 'User ID');
+        $show->field('name', 'Full Name');
+        $show->field('username', 'Username');
+        $show->field('email', 'Email Address');
+        $show->field('phone_number', 'Phone Number');
+        $show->field('gender', 'Gender')->using(['male' => 'Male', 'female' => 'Female']);
+
+        $show->divider('Authentication & Roles');
+
+        $show->field('roles', 'Roles')->as(function ($roles) {
             return $roles->pluck('name');
-        })->label();
-        $show->field('permissions', trans('admin.permissions'))->as(function ($permission) {
+        })->label('primary');
+
+        $show->field('permissions', 'Permissions')->as(function ($permission) {
             return $permission->pluck('name');
         })->label();
-        $show->field('created_at', trans('admin.created_at'));
-        $show->field('updated_at', trans('admin.updated_at'));
+        
+        $show->divider('Timestamps');
+        $show->field('created_at');
+        $show->field('updated_at');
 
         return $show;
     }
@@ -85,7 +147,7 @@ class UserController extends AdminController
      */
     public function form()
     {
-        $userModel = config('admin.database.users_model');
+        $userModel = config('admin.database.users_model', User::class);
         $permissionModel = config('admin.database.permissions_model');
         $roleModel = config('admin.database.roles_model');
 
@@ -94,31 +156,61 @@ class UserController extends AdminController
         $userTable = config('admin.database.users_table');
         $connection = config('admin.database.connection');
 
-        $form->display('id', 'ID');
-        $form->text('username', trans('admin.username'))
-            ->creationRules(['required', "unique:{$connection}.{$userTable}"])
-            ->updateRules(['required', "unique:{$connection}.{$userTable},username,{{id}}"]);
-
-        $form->text('name', trans('admin.name'))->rules('required');
-        $form->image('avatar', trans('admin.avatar'));
-        $form->password('password', trans('admin.password'))->rules('required|confirmed');
-        $form->password('password_confirmation', trans('admin.password_confirmation'))->rules('required')
-            ->default(function ($form) {
-                return $form->model()->password;
+        $form->tab('User Profile', function ($form) use ($userTable, $connection) {
+            $form->image('avatar', 'Avatar')->uniqueName()->move('avatars')->rules('image');
+            
+            $form->column(1/2, function ($form) {
+                $form->text('first_name', 'First Name')->rules('required|min:2');
+                $form->text('last_name', 'Last Name')->rules('required|min:2');
+            });
+            
+            $form->column(1/2, function ($form) {
+                 $form->text('username', 'Username')
+                ->creationRules(['required', "unique:{$connection}.{$userTable}"])
+                ->updateRules(['required', "unique:{$connection}.{$userTable},username,{{id}}"]);
+                
+                 $form->radio('gender', 'Gender')->options(['male' => 'Male', 'female' => 'Female'])->rules('required')->default('male');
             });
 
-        $form->ignore(['password_confirmation']);
+            $form->divider();
 
-        $form->multipleSelect('roles', trans('admin.roles'))->options($roleModel::all()->pluck('name', 'id'));
-        $form->multipleSelect('permissions', trans('admin.permissions'))->options($permissionModel::all()->pluck('name', 'id'));
+            $form->email('email', 'Email Address')
+                ->creationRules(['required', 'email', "unique:{$connection}.{$userTable}"])
+                ->updateRules(['required', 'email', "unique:{$connection}.{$userTable},email,{{id}}"]);
+            
+            $form->text('phone_number', 'Phone Number')->rules('nullable|min:10');
 
-        $form->display('created_at', trans('admin.created_at'));
-        $form->display('updated_at', trans('admin.updated_at'));
+        })->tab('Authentication', function ($form) use ($roleModel, $permissionModel) {
+            
+            $form->password('password', 'Password')->rules('nullable|min:6|confirmed');
+            $form->password('password_confirmation', 'Confirm Password')->rules('nullable');
 
+            $form->ignore(['password_confirmation']);
+
+            $form->multipleSelect('roles', 'Roles')->options($roleModel::all()->pluck('name', 'id'))->rules('required');
+            $form->multipleSelect('permissions', 'Permissions')->options($permissionModel::all()->pluck('name', 'id'));
+        });
+
+        // Callback to handle password hashing and name concatenation
         $form->saving(function (Form $form) {
+            // Concatenate first and last name to create the full 'name'
+            if ($form->first_name && $form->last_name) {
+                $form->name = $form->first_name . ' ' . $form->last_name;
+            }
+
+            // Hash password if it is being changed
             if ($form->password && $form->model()->password != $form->password) {
                 $form->password = Hash::make($form->password);
             }
+            
+            // If password fields are empty on an update, don't change the password
+            if (empty($form->password)) {
+                $form->deleteInput('password');
+            }
+        });
+        
+        $form->tools(function (Form\Tools $tools) {
+            $tools->disableDelete(request('user') == 1);
         });
 
         return $form;

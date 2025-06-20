@@ -88,6 +88,12 @@ Admin::navbar(function (\Encore\Admin\Widgets\Navbar $navbar) {
 Encore\Admin\Form::forget(['map', 'editor']);
 Admin::css(url('/assets/css/bootstrap.css'));
 Admin::css('/assets/css/styles.css');
+
+Admin::css('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+Admin::css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css');
+Admin::css('https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css');
+Admin::js('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+Admin::js('https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js');
 //js https://cdn.jsdelivr.net/npm/chart.js
 /* Admin::js('https://cdn.jsdelivr.net/npm/chart.js'); */
 ApiResurceController::process_farmers_accounts();

@@ -91,4 +91,23 @@ class Garden extends Model
 
     //appends crop_text
     protected $appends = ['crop_text', 'parish_text'];
+
+    //belongs to user
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    } 
+
+    //belongs to district
+    public function district()
+    {
+        return $this->belongsTo(District::class);
+    }    
+
+
+    //has many garden activities
+    public function gardenActivities()
+    {
+        return $this->hasMany(GardenActivity::class);
+    } 
 }

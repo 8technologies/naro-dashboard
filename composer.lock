@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b724852c4e90ad802dd10b644705089c",
+    "content-hash": "a297148f15c0cc41da15c66e1ba69457",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1056,6 +1056,55 @@
             "time": "2022-02-23T14:25:13+00:00"
         },
         {
+            "name": "gajus/dindent",
+            "version": "2.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/gajus/dindent.git",
+                "reference": "d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/gajus/dindent/zipball/d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c",
+                "reference": "d81c3a6f78fbe1ab26f5e753098bbbef6b6a9f3c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "satooshi/php-coveralls": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Gajus\\Dindent\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Gajus Kuizinas",
+                    "email": "gk@anuary.com"
+                }
+            ],
+            "description": "HTML indentation library for development and testing.",
+            "homepage": "https://github.com/gajus/dindent",
+            "keywords": [
+                "format",
+                "html",
+                "indent"
+            ],
+            "support": {
+                "issues": "https://github.com/gajus/dindent/issues",
+                "source": "https://github.com/gajus/dindent/tree/master"
+            },
+            "time": "2014-10-08T10:03:04+00:00"
+        },
+        {
             "name": "graham-campbell/result-type",
             "version": "v1.1.2",
             "source": {
@@ -1554,6 +1603,65 @@
                 "source": "https://github.com/laravel-admin-extensions/chartjs/tree/master"
             },
             "time": "2018-09-16T17:28:26+00:00"
+        },
+        {
+            "name": "laravel-admin-ext/grid-lightbox",
+            "version": "v1.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel-admin-extensions/grid-lightbox.git",
+                "reference": "f8a247f0d017eb05830cc720fb621401b1bfbc2c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel-admin-extensions/grid-lightbox/zipball/f8a247f0d017eb05830cc720fb621401b1bfbc2c",
+                "reference": "f8a247f0d017eb05830cc720fb621401b1bfbc2c",
+                "shasum": ""
+            },
+            "require": {
+                "encore/laravel-admin": "~1.6",
+                "php": ">=7.0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~6.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Encore\\Grid\\Lightbox\\LightboxServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Encore\\Grid\\Lightbox\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "song",
+                    "email": "zosong@126.com"
+                }
+            ],
+            "description": "Turn your grid into a lightbox & gallery",
+            "homepage": "https://github.com/laravel-admin-ext/grid-lightbox",
+            "keywords": [
+                "extension",
+                "gallery",
+                "grid",
+                "laravel-admin",
+                "lightbox"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel-admin-extensions/grid-lightbox/issues",
+                "source": "https://github.com/laravel-admin-extensions/grid-lightbox/tree/v1.0.3"
+            },
+            "time": "2019-10-11T06:38:51+00:00"
         },
         {
             "name": "laravel-admin-ext/helpers",
@@ -2092,6 +2200,68 @@
                 "source": "https://github.com/laravel/ui/tree/v3.4.6"
             },
             "time": "2022-05-20T13:38:08+00:00"
+        },
+        {
+            "name": "larswiegers/laravel-maps",
+            "version": "v0.13",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/LarsWiegers/laravel-maps.git",
+                "reference": "aa9f060ca093b6d5d7ceafcb839160a010160da9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/LarsWiegers/laravel-maps/zipball/aa9f060ca093b6d5d7ceafcb839160a010160da9",
+                "reference": "aa9f060ca093b6d5d7ceafcb839160a010160da9",
+                "shasum": ""
+            },
+            "require": {
+                "gajus/dindent": "^2.0.2",
+                "illuminate/support": "^8.0|^9.43",
+                "php": "^7.4|^8.0|^8.1|^8.2"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^6.0|^7.0",
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "LaravelMaps": "Larswiegers\\LaravelMaps\\LaravelMapsFacade"
+                    },
+                    "providers": [
+                        "Larswiegers\\LaravelMaps\\LaravelMapsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Larswiegers\\LaravelMaps\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lars Wiegers",
+                    "email": "larswiegers@live.nl",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A new way to handle maps in your laravel applications.",
+            "homepage": "https://github.com/larswiegers/laravel-maps",
+            "keywords": [
+                "laravel-maps",
+                "larswiegers"
+            ],
+            "support": {
+                "issues": "https://github.com/LarsWiegers/laravel-maps/issues",
+                "source": "https://github.com/LarsWiegers/laravel-maps/tree/v0.13"
+            },
+            "time": "2022-12-09T16:02:54+00:00"
         },
         {
             "name": "lcobucci/clock",
@@ -8994,6 +9164,6 @@
     "platform": {
         "php": "^7.3|^8.0"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

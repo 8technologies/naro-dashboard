@@ -14,12 +14,14 @@
         "guzzlehttp/guzzle": "^7.0.1",
         "jxlwqq/quill": "^1.0",
         "laravel-admin-ext/chartjs": "^1.0",
+        "laravel-admin-ext/grid-lightbox": "^1.0",
         "laravel-admin-ext/helpers": "2.*",
         "laravel-admin-ext/summernote": "^1.0",
         "laravel/framework": "^8.65",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
+        "larswiegers/laravel-maps": "^0.13.0",
         "tymon/jwt-auth": "^1.0@dev"
     },
     "require-dev": {

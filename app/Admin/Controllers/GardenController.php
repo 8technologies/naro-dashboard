@@ -3,11 +3,11 @@
 namespace App\Admin\Controllers;
 
 use App\Models\Crop;
-use App\Models\Farmer;
+use App\Models\District;
 use App\Models\Garden;
 use App\Models\Parish;
+use App\Models\Subcounty;
 use App\Models\User;
-use App\Models\Utils;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
@@ -17,110 +17,79 @@ class GardenController extends AdminController
 {
     /**
      * Title for current resource.
-     *
      * @var string
      */
-    protected $title = 'Garden';
+    protected $title = 'Gardens';
 
     /**
      * Make a grid builder.
-     *
      * @return Grid
      */
     protected function grid()
     {
         $grid = new Grid(new Garden());
 
+        // Eager load relationships for massive performance improvement
+        $grid->model()->with(['user', 'crop', 'parish']);
+
+        // ======== FILTERS & SEARCH ========
+        $grid->quickSearch(function ($model, $query) {
+            $model->where('name', 'like', "%{$query}%")
+                ->orWhereHas('user', function ($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%");
+                })
+                ->orWhereHas('crop', function ($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%");
+                });
+        })->placeholder('Search by Garden Name, Owner, or Crop...');
+
         $grid->filter(function ($filter) {
             $filter->disableIdFilter();
-            $filter->like('name', 'Garden name');
-
-            /* crop_id is select */
-            $filter->equal('crop_id', 'Crop name')
-                ->select(Crop::all()->pluck('name', 'id'));
-
-            /* user_id is select */
-            $filter->equal('user_id', 'Owner')
-                ->select(User::all()->pluck('name', 'id'));
-
-            /*             $filter->like('crop_id', 'Crop name');
-            $filter->like('user_id', 'Owner');
-            $filter->like('parish_id', 'Parish'); */
+            $filter->like('name', 'Garden Name');
+            $filter->equal('user_id', 'Owner')->select(User::all()->pluck('name', 'id'));
+            $filter->equal('crop_id', 'Crop Type')->select(Crop::all()->pluck('name', 'id'));
+            $filter->equal('status', 'Garden Status')->select(
+                ['Active' => 'Active', 'Inactive' => 'Inactive', 'Harvested' => 'Harvested', 'Growing' => 'Growing', 'Fallow' => 'Fallow']
+            );
+            $filter->equal('production_scale', 'Production Scale')->select(
+                ['Small scale' => 'Small scale', 'Medium scale' => 'Medium scale', 'Large scale' => 'Large scale']
+            );
+            $filter->between('created_at', 'Date Created')->date();
         });
 
-        $grid->model()->orderBy('id', 'desc');
-        $grid->quickSearch('name', 'id', 'crop_id', 'user_id', 'parish_id')
-            ->placeholder('Search by name, crop, owner, parish');
-        $grid->column('id', __('Sn'))->sortable();
-        $grid->column('name', __('Name'))->sortable();
-        $grid->column('crop_id', __('Crop Planted'))
-            ->display(function ($crop_name) {
-                $crop = Crop::find($this->crop_id);
-                if ($crop == null) {
-                    return 'Unknown';
-                }
-                return $crop->name;
-            })->sortable();
 
-        $grid->column('production_scale', __('Production Scale'))
-            ->sortable();
-        $grid->column('planting_date', __('Planting Date'))
-            ->display(function ($planting_date) {
-                return Utils::my_date($planting_date);
-            })->sortable();
-        $grid->column('land_occupied', __('Land Occupied (Acres)'))->sortable();
-        $grid->column('user_id', __('Owner'))
-            ->display(function ($user_id) {
-                $farmer = User::find($user_id);
-                if ($farmer == null) {
-                    return 'Unknown';
-                }
-                return $farmer->name;
-            })->sortable();
+        // ======== GRID COLUMNS ========
+        $grid->column('id', __('ID'))->sortable();
+        $grid->column('photo', __('Photo'))->lightbox(['width' => 80, 'height' => 60]);
+        $grid->column('name', __('Garden Name'))->sortable();
 
-        $grid->column('photo', __('Photo'))->hide();
-        $grid->column('gps_lati', __('GPS'))
-            ->display(function ($gps_lati) {
-                return $this->gps_lati . ', ' . $this->gps_longi;
-            })->sortable();
-        $grid->column('harvest_date', __('Expected Harvest Date'))
-            ->display(function ($harvest_date) {
-                return Utils::my_date($harvest_date);
-            })->sortable();
-        $grid->column('is_harvested', __('Is Harvested'))
-            ->display(function ($is_harvested) {
-                return $is_harvested == 'Yes' ? '<span class="label label-success">Yes</span>' : '<span class="label label-danger">No</span>';
-            })->sortable();
-        $grid->column('harvest_quality', __('Harvest Quality'))->hide();
-        $grid->column('quantity_harvested', __('Quantity harvested'))->hide();
-        $grid->column('quantity_planted', __('Quantity planted'))->hide();
-        $grid->column('harvest_notes', __('Harvest notes'))->hide();
-        $grid->column('parish_id', __('Parish'))
-            ->display(function ($parish_id) {
-                $parish = Parish::find($parish_id);
-                if ($parish == null) {
-                    return 'Unknown';
-                }
-                return $parish->name_text;
-            })->sortable();
-        $grid->column('income', __('Income'))->hide();
-        $grid->column('expense', __('Expense'))->hide();
-        $grid->column('profit', __('Profit/Loss'))->hide();
+        $grid->column('user.name', __('Owner'))->sortable();
+        $grid->column('crop.name', __('Crop Planted'))->sortable();
 
-        $grid->column('status', __('Garden Status'))
-            ->display(function ($status) {
-                return $status == 'Active' ? '<span class="label label-success">Active</span>' : '<span class="label label-danger">Inactive</span>';
-            })->sortable();
-        $grid->column('created_at', __('Created'))
-            ->display(function ($created_at) {
-                return Utils::my_date($created_at);
-            })->sortable();
+        $grid->column('land_occupied', __('Land (Acres)'))->sortable();
+
+        $grid->column('planting_date', __('Planted On'))->display(function ($date) {
+            return $date ? date('M d, Y', strtotime($date)) : 'N/A';
+        })->sortable();
+
+        $grid->column('production_scale', __('Production Scale'))->sortable();
+        $grid->column('created_at', __('Created At'))->display(function ($date) {
+            return $date ? date('M d, Y', strtotime($date)) : 'N/A';
+        })->sortable();
+
+        $grid->column('status', __('Status'))->label([
+            'Active' => 'success',
+            'Growing' => 'info',
+            'Harvested' => 'primary',
+            'Fallow' => 'warning',
+            'Inactive' => 'danger',
+        ])->sortable();
+
         return $grid;
     }
 
     /**
      * Make a show builder.
-     *
      * @param mixed $id
      * @return Show
      */
@@ -128,97 +97,107 @@ class GardenController extends AdminController
     {
         $show = new Show(Garden::findOrFail($id));
 
-        $show->field('id', __('Id'));
-        $show->field('created_at', __('Created at'));
-        $show->field('updated_at', __('Updated at'));
-        $show->field('name', __('Name'));
-        $show->field('crop_name', __('Crop name'));
-        $show->field('status', __('Status'));
-        $show->field('production_scale', __('Production scale'));
-        $show->field('planting_date', __('Planting date'));
-        $show->field('land_occupied', __('Land occupied'));
-        $show->field('crop_id', __('Crop id'));
-        $show->field('details', __('Details'));
-        $show->field('user_id', __('User id'));
-        $show->field('photo', __('Photo'));
-        $show->field('gps_lati', __('Gps lati'));
-        $show->field('gps_longi', __('Gps longi'));
-        $show->field('harvest_date', __('Harvest date'));
-        $show->field('is_harvested', __('Is harvested'));
-        $show->field('harvest_quality', __('Harvest quality'));
-        $show->field('quantity_harvested', __('Quantity harvested'));
-        $show->field('quantity_planted', __('Quantity planted'));
-        $show->field('harvest_notes', __('Harvest notes'));
-        $show->field('district_id', __('District id'));
-        $show->field('subcounty_id', __('Subcounty id'));
-        $show->field('parish_id', __('Parish id'));
-        $show->field('income', __('Income'));
-        $show->field('expense', __('Expense'));
-        $show->field('profit', __('Profit'));
+        $show->panel()->title("Details for " . $show->getModel()->name);
+
+        $show->divider('Garden Overview');
+        $show->field('photo', __('Garden Photo'))->image();
+        $show->field('id', __('Garden ID'));
+        $show->field('name', __('Garden Name'));
+        $show->field('user.name', __('Owner'));
+        $show->field('crop.name', __('Crop Planted'));
+        $show->field('status', __('Status'))->label();
+        $show->field('production_scale', __('Production Scale'));
+        $show->field('land_occupied', __('Land Size (Acres)'));
+
+        $show->divider('Location Details');
+        $show->field('district.name', __('District'));
+        $show->field('subcounty.name', __('Subcounty'));
+        $show->field('parish.name', __('Parish'));
+        $show->field('gps_lati', __('GPS Latitude'));
+        $show->field('gps_longi', __('GPS Longitude'));
+
+        $show->divider('Planting & Harvest Information');
+        $show->field('planting_date', __('Planting Date'));
+        $show->field('harvest_date', __('Expected Harvest Date'));
+        $show->field('quantity_planted', __('Quantity Planted'));
+        $show->field('is_harvested', __('Is Harvested?'))->using(['Yes' => 'Yes', 'No' => 'No'])->label();
+
+        $show->field('harvest_quality', __('Harvest Quality'));
+        $show->field('quantity_harvested', __('Quantity Harvested'));
+        $show->field('harvest_notes', __('Harvest Notes'));
+
+        $show->divider('Financials');
+        $show->field('income', __('Total Income'))->as(fn($income) => number_format($income));
+        $show->field('expense', __('Total Expense'))->as(fn($expense) => number_format($expense));
+        $show->field('profit', __('Profit/Loss'))->as(fn($profit) => number_format($profit));
+
+        $show->divider('Timestamps');
+        $show->field('created_at', __('Created At'));
+        $show->field('updated_at', __('Updated At'));
 
         return $show;
     }
 
     /**
      * Make a form builder.
-     *
      * @return Form
      */
     protected function form()
     {
         $form = new Form(new Garden());
 
-        $form->saved(function (Form $form) {
-            admin_toastr(__('Garden submitted successfully'), 'success');
-            return redirect('/gardens');
+        $form->tab('Basic Information', function ($form) {
+            $form->text('name', __('Garden Name'))->rules('required|min:3');
+
+            $form->select('user_id', 'Farm Owner')
+                ->options(User::all()->pluck('name', 'id'))
+                ->rules('required');
+
+            $form->select('crop_id', __('Crop Planted'))
+                ->options(Crop::all()->pluck('name', 'id'))
+                ->rules('required');
+
+            $form->image('photo', __('Garden Photo'))->uniqueName()->move('gardens');
+
+            $form->textarea('details', __('Garden Details & Notes'));
         });
-        $form->text('name', __('Garden name'))->rules('required');
-        // $form->text('crop_name', __('Crop name'));
-        $form->select('crop_id', __('Crop Planted'))
-            ->options(Crop::all()->pluck('name', 'id'))
-            ->rules('required');
 
+        $form->tab('Location', function ($form) {
+            $form->select('district_id', 'District')->options(District::all()->pluck('name', 'id'))->load('subcounty_id', '/api/subcounties');
+            $form->select('subcounty_id', 'Subcounty')->options(function ($id) {
+                return Subcounty::where('id', $id)->pluck('name', 'id');
+            })->load('parish_id', '/api/parishes');
+            $form->select('parish_id', 'Parish')->options(function ($id) {
+                return Parish::where('id', $id)->pluck('name', 'id');
+            });
 
-        $form->select('user_id', 'Farm owner')
-            ->options(Farmer::get_select_items())->rules('required');
-        $form->radio('status', __('Garden Status'))
-            ->options(['Active' => 'Active', 'Inactive' => 'Inactive'])
-            ->default('Active')
-            ->rules('required');
+            $form->text('gps_lati', __('GPS latitude'));
+            $form->text('gps_longi', __('GPS longitude'));
+        });
 
-        $form->radio('production_scale', __('Production Scale'))
-            ->options([
-                'Small scale' => 'Small scale',
-                'Medium scale' => 'Medium scale',
-                'Large scale' => 'Large scale'
-            ])->rules('required');
+        $form->tab('Planting & Harvest', function ($form) {
+            $form->radio('production_scale', __('Production Scale'))
+                ->options(['Small scale' => 'Small scale', 'Medium scale' => 'Medium scale', 'Large scale' => 'Large scale'])
+                ->rules('required')->default('Small scale');
 
-        $form->date('planting_date', __('Planting date'))->rules('required');
-        $form->date('harvest_date', __('Expected Harvest date'))->rules('required');
+            $form->text('land_occupied', __('Land Size (e.g., 2.5 Acres)'))->rules('required');
+            $form->text('quantity_planted', __('Quantity Planted (e.g., 10 kgs)'));
 
-        $form->decimal('land_occupied', __('Land Size in Acres'))->rules('required');
-        $form->image('photo', __('Garden Photo'));
-        $parihses = Parish::getDropDownList();
-        $form->select('parish_id', __('Parish'))->options($parihses)->rules('required');
-        $form->text('gps_lati', __('Gps latitude'));
-        $form->text('gps_longi', __('Gps longitude'));
-        $form->textarea('details', __('Farm Details'));
+            $form->date('planting_date', __('Planting Date'))->rules('required');
+            $form->date('harvest_date', __('Expected Harvest Date'));
 
-        $form->radio('is_harvested', __('Is harvested?'))
-            ->default('No')
-            ->options(['Yes' => 'Yes', 'No' => 'No'])
-            ->when(
-                'Yes',
-                function (Form $form) {
-                    $form->textarea('harvest_quality', __('Harvest quality'))->rules('required');
-                    $form->number('quantity_harvested', __('Quantity harvested'))->rules('required');
-                    $form->number('quantity_planted', __('Quantity planted'))->rules('required');
-                    $form->textarea('harvest_notes', __('Harvest notes'));
-                }
-            );
+            $form->divider('Harvest Details');
 
-
-
+            $form->radio('is_harvested', __('Is the garden harvested?'))
+                ->options(['Yes' => 'Yes', 'No' => 'No'])
+                ->default('No')
+                ->when('Yes', function (Form $form) {
+                    $form->select('harvest_quality', __('Harvest Quality'))
+                        ->options(['Excellent' => 'Excellent', 'Good' => 'Good', 'Average' => 'Average', 'Poor' => 'Poor']);
+                    $form->text('quantity_harvested', __('Quantity Harvested (e.g., 15 bags)'));
+                    $form->textarea('harvest_notes', __('Harvest Notes'));
+                });
+        });
 
         return $form;
     }

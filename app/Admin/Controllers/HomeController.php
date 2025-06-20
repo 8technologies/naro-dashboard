@@ -25,6 +25,73 @@ use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
+
+    //function called gardens_map that will return a map of all gardens on map  
+    // In your GardenController.php...
+
+    public function gardens_map(Content $content)
+    {
+        $content
+            ->title('Gardens Map')
+            ->description('Map of all registered gardens.');
+
+        $content->row(function (Row $row) {
+            $row->column(12, function (Column $column) {
+                // THE FIX: Eager load relationships for performance
+                $gardens = Garden::with('user', 'district')->get();
+                $gardens_data = [];
+
+                foreach ($gardens as $garden) {
+                    if (empty($garden->gps_lati) || empty($garden->gps_longi)) {
+                        continue;
+                    }
+
+                    // --- Build the new, detailed popup HTML ---
+
+                    // Garden Name (Title)
+                    $popupContent = "<h3>" . htmlspecialchars($garden->name) . "</h3>";
+
+                    // Details Table
+                    $popupContent .= "<table>";
+                    $popupContent .= "<tr><td><strong>Crop:</strong></td><td>" . htmlspecialchars($garden->crop_name) . "</td></tr>";
+
+                    // Add District, checking if it exists
+                    $districtName = $garden->district ? htmlspecialchars($garden->district->name) : 'N/A';
+                    $popupContent .= "<tr><td><strong>District:</strong></td><td>" . $districtName . "</td></tr>";
+
+                    // Add Owner Name, checking if user relationship exists
+                    $ownerName = $garden->user ? htmlspecialchars($garden->user->name) : 'N/A';
+                    $popupContent .= "<tr><td><strong>Owner:</strong></td><td>" . $ownerName . "</td></tr>";
+
+                    // Add Owner Contact, checking if user relationship exists
+                    $ownerContact = $garden->user ? htmlspecialchars($garden->user->phone_number) : 'N/A';
+                    $popupContent .= "<tr><td><strong>Contact:</strong></td><td>" . $ownerContact . "</td></tr>";
+                    $popupContent .= "</table>";
+
+                    // Links / Buttons
+                    $popupContent .= "<div class='popup-actions'>";
+                    $popupContent .= "<a href='" . url('/admin/gardens/' . $garden->id) . "' target='_blank' rel='noopener noreferrer' class='popup-link details'>View Details</a>";
+                    $popupContent .= "<a href='https://www.google.com/maps/dir/?api=1&destination={$garden->gps_lati},{$garden->gps_longi}' target='_blank' rel='noopener noreferrer' class='popup-link directions'>Get Directions</a>";
+                    $popupContent .= "</div>";
+
+
+                    $gardens_data[] = [
+                        'lat'   => (float) $garden->gps_lati,
+                        'long'  => (float) $garden->gps_longi,
+                        'popup' => $popupContent,
+                    ];
+                }
+
+                $column->append(view('maps.raw_leaflet_map', [
+                    'gardens' => $gardens_data,
+                ]));
+            });
+        });
+
+        return $content;
+    }
+
+
     public function questions(Content $content)
     {
 
@@ -68,7 +135,7 @@ class HomeController extends Controller
 
     public function index(Content $content)
     {
-     /* 
+        /* 
         foreach (FinancialRecord::all() as $key => $val) {
             $now = Carbon::now();
             //random date between 5 months ago and now
@@ -245,7 +312,7 @@ class HomeController extends Controller
             $row->column(12, function (Column $column) {
                 $recentFarmers = Farmer::orderBy('created_at', 'desc')->limit(10)->get();
                 $column->append(view('widgets.products-services', [
-                    'farmers' => $recentFarmers, 
+                    'farmers' => $recentFarmers,
                 ]));
             });
         });

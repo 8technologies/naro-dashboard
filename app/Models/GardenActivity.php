@@ -19,6 +19,23 @@ class GardenActivity extends Model
         'remarks'
 
     ];
+
+
+    //boot
+    public static function boot()
+    {
+        parent::boot();
+        self::creating(function ($m) {
+            if ($m->user_id == null) {
+
+                $m->user_id = auth()->id(); // Set the user_id to the currently authenticated user 
+            }
+            if ($m->garden_id == null) {
+                $m->crop_activity_id = 1;
+            }
+        });
+    }
+
     //append for garden_text
     protected $appends = ['garden_text'];
     //get garden_text
@@ -37,4 +54,10 @@ class GardenActivity extends Model
     {
         return $this->belongsTo(Garden::class);
     }
+
+    //belongs to user
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    } 
 }
