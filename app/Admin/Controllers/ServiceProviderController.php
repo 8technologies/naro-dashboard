@@ -7,6 +7,8 @@ use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
+use Encore\Admin\Layout\Content;
+use Illuminate\Html\HtmlFacade as Html;
 
 class ServiceProviderController extends AdminController
 {
@@ -25,18 +27,43 @@ class ServiceProviderController extends AdminController
     protected function grid()
     {
         $grid = new Grid(new ServiceProvider());
+
+        // Default ordering & search
         $grid->model()->orderBy('id', 'desc');
-        $grid->quickSearch();
+        $grid->quickSearch('provider_name', 'business_name');
+
+        // Filters
+        $grid->filter(function (Grid\Filter $filter) {
+            $filter->disableIdFilter();
+            $filter->like('provider_name', 'Provider Name');
+            $filter->like('business_name', 'Business Name');
+            $filter->equal('services_offered', 'Service')->select(
+                ServiceProvider::pluck('services_offered', 'services_offered')->unique()
+            );
+        });
+
+        // Columns
         $grid->column('provider_name', __('Provider Name'))->sortable();
-        $grid->column('business_name', __('Business name'))->sortable();
-        $grid->column('details', __('Details'))->hide();
-        $grid->column('services_offered', __('Services offered'));
-        $grid->column('gps_lat', __('Gps lat'));
-        $grid->column('gps_long', __('Gps long'));
-        $grid->column('photo', __('Photo'));
-        $grid->column('phone_number', __('Phone number'));
-        $grid->column('phone_number_2', __('Phone number 2'));
+        $grid->column('business_name', __('Business Name'))->sortable();
+        $grid->column('services_offered', __('Services Offered'))->label();
+        $grid->column('photo', __('Photo'))
+            ->lightbox(['width' => 100, 'height' => 100])
+            ->sortable();
+
+        $grid->column('gps_lat', __('Latitude'))
+            ->display(function ($lat) {
+                return number_format($lat, 6);
+            });
+        $grid->column('gps_long', __('Longitude'))
+            ->display(function ($lng) {
+                return number_format($lng, 6);
+            });
+        $grid->column('phone_number', __('Phone'))->sortable();
+        $grid->column('phone_number_2', __('Alt Phone'));
         $grid->column('email', __('Email'));
+
+        // Hide verbose fields by default
+        $grid->column('details', __('Details'))->hide();
 
         return $grid;
     }
@@ -51,19 +78,38 @@ class ServiceProviderController extends AdminController
     {
         $show = new Show(ServiceProvider::findOrFail($id));
 
-        $show->field('id', __('Id'));
-        $show->field('created_at', __('Created at'));
-        $show->field('updated_at', __('Updated at'));
-        $show->field('provider_name', __('Provider name'));
-        $show->field('business_name', __('Business name'));
-        $show->field('details', __('Details'));
-        $show->field('services_offered', __('Services offered'));
-        $show->field('gps_lat', __('Gps lat'));
-        $show->field('gps_long', __('Gps long'));
-        $show->field('photo', __('Photo'));
-        $show->field('phone_number', __('Phone number'));
-        $show->field('phone_number_2', __('Phone number 2'));
+        $show->panel()
+            ->tools(function ($tools) {
+                $tools->disableEdit();
+                $tools->disableDelete();
+            });
+
+        $show->field('id', __('ID'));
+        $show->field('provider_name', __('Provider Name'));
+        $show->field('business_name', __('Business Name'));
+        $show->field('services_offered', __('Services Offered'))->as(function ($tags) {
+            return implode(', ', $tags);
+        })->label();
+        $show->field('details', __('Details'))->unescape();
+
+        $show->divider();
+        $show->field('photo', __('Photo'))->as(function ($photo) {
+            return $photo
+                ? Html::image(asset('storage/' . $photo), 'Photo', ['width' => '100'])
+                : '<span>No Image Provided</span>';
+        })->unescape();
+
+        $show->divider();
+        $show->field('gps_lat', __('Latitude'));
+        $show->field('gps_long', __('Longitude'));
+        $show->map(['gps_lat', 'gps_long'], __('Location'))->height('300px');
+
+        $show->divider();
+        $show->field('phone_number', __('Phone'));
+        $show->field('phone_number_2', __('Alternate Phone'));
         $show->field('email', __('Email'));
+        $show->field('created_at', __('Created At'));
+        $show->field('updated_at', __('Updated At'));
 
         return $show;
     }
@@ -76,18 +122,41 @@ class ServiceProviderController extends AdminController
     protected function form()
     {
         $form = new Form(new ServiceProvider());
+
+        // Basic info
         $form->text('provider_name', __('Provider Name'))
-            ->rules('required');
+            ->rules('required|string|max:255');
         $form->text('business_name', __('Business Name'))
-            ->rules('required');
-        $form->tags('services_offered', __('Services offered'));
+            ->rules('required|string|max:255');
+        $form->tags('services_offered', __('Services Offered'))
+            ->help('Add multiple services separated by comma');
         $form->quill('details', __('Details'));
-        $form->decimal('gps_lat', __('GPS latitude'));
-        $form->decimal('gps_long', __('Gps longitude'));
-        $form->image('photo', __('Businness Photo'));
-        $form->text('phone_number', __('Phone number'));
-        $form->text('phone_number_2', __('Phone number 2'));
-        $form->email('email', __('Email'));
+
+        // Location
+        $form->decimal('gps_lat', __('GPS Latitude'), 10, 6)
+            ->rules('nullable|numeric|min:-90|max:90');
+        $form->decimal('gps_long', __('GPS Longitude'), 10, 6)
+            ->rules('nullable|numeric|min:-180|max:180');
+        $form->text('gps_lat', __('Latitude'))
+            ->default(0)
+            ->rules('nullable|numeric|min:-90|max:90');
+        $form->text('gps_long', __('Longitude'))
+            ->default(0)
+            ->rules('nullable|numeric|min:-180|max:180');
+
+        // Media
+        $form->image('photo', __('Business Photo'))
+            ->uniqueName()
+            ->move('service_providers/photos');
+
+        // Contacts
+        $form->mobile('phone_number', __('Phone Number'))
+            ->options(['mask' => '+\############'])
+            ->rules('nullable|regex:/^[\d+\-\s]+$/');
+        $form->mobile('phone_number_2', __('Alternate Phone'))
+            ->options(['mask' => '+\############']);
+        $form->email('email', __('Email'))
+            ->rules('nullable|email');
 
         return $form;
     }
