@@ -18,6 +18,7 @@ use App\Models\PestsAndDisease;
 use App\Models\PestsAndDiseaseReport;
 use App\Models\Product;
 use App\Models\ServiceProvider;
+use App\Models\Utils;
 use Carbon\Carbon;
 use Encore\Admin\Layout\Row;
 use Illuminate\Support\Facades\Auth;
@@ -26,8 +27,121 @@ use Illuminate\Support\Facades\Auth;
 class HomeController extends Controller
 {
 
+
+    public function providers_map(Content $content)
+    {
+        $content->title('Service Providers Map')
+            ->description('Interactive map of all registered service providers.');
+
+        $content->row(function (Row $row) {
+            $row->column(12, function (Column $column) {
+                // Eager-load nothing, but get all providers
+                $providers = ServiceProvider::all();
+
+                $markers = [];
+                foreach ($providers as $sp) {
+                    if (empty($sp->gps_lat) || empty($sp->gps_long)) {
+                        continue;
+                    }
+
+                    // Build popup HTML
+                    $popup  = '<div class="sp-popup">';
+                    $popup .= '<h3>' . e($sp->provider_name) . '</h3>';
+                    $popup .= '<p><strong>Business:</strong> ' . e($sp->business_name) . '</p>';
+                    $popup .= '<p><strong>Services:</strong> ' . e($sp->services_offered) . '</p>';
+                    $popup .= '<p><strong>Details:</strong> ' . e($sp->details) . '</p>';
+                    $popup .= '<p><strong>Contact:</strong><br>'
+                        . e($sp->phone_number)
+                        . ($sp->phone_number_2 ? ' / ' . e($sp->phone_number_2) : '')
+                        . '</p>';
+                    if ($sp->email) {
+                        $popup .= '<p><strong>Email:</strong> ' . e($sp->email) . '</p>';
+                    }
+                    if ($sp->photo) {
+                        $popup .= '<div class="popup-image">'
+                            . '<img src="' . asset('storage/' . $sp->photo) . '" alt="Photo" />'
+                            . '</div>';
+                    }
+                    $popup .= '<div class="popup-actions">'
+                        . '<a href="' . admin_url("service-providers/{$sp->id}") . '" class="popup-link">View Details</a>'
+                        . '</div></div>';
+
+                    $markers[] = [
+                        'lat'   => (float) $sp->gps_lat,
+                        'long'  => (float) $sp->gps_long,
+                        'popup' => $popup,
+                    ];
+                }
+
+                $column->append(view('maps.service_providers_leaflet_map', [
+                    'markers' => $markers,
+                ]));
+            });
+        });
+
+        return $content;
+    }
+
+
+    public function pests_map(Content $content)
+    {
+        $content->title('Pest Reports Map')
+            ->description('Interactive map of all pest & disease reports.');
+
+        $content->row(function (Row $row) {
+            $row->column(12, function (Column $column) {
+                // Eager-load related data
+                $reports = PestsAndDiseaseReport::with([
+                    'pestsAndDisease',
+                    'garden.user',
+                    'garden.district'
+                ])->get();
+
+                $markers = [];
+
+                foreach ($reports as $rep) {
+                    if (empty($rep->gps_lati) || empty($rep->gps_longi)) {
+                        continue;
+                    }
+
+                    // Build popup HTML
+                    $popup  = '<div class="report-popup">';
+                    $popup .= '<h3>' . e($rep->pestsAndDisease->category ?? 'Unknown') . '</h3>';
+                    $popup .= '<p><strong>Date:</strong> ' . e(Utils::my_date($rep->created_at)) . '</p>';
+                    $popup .= '<p><strong>Garden:</strong> ' . e($rep->garden->name ?? 'N/A') . '</p>';
+                    $popup .= '<p><strong>District:</strong> ' . e($rep->garden->district->name ?? 'N/A') . '</p>';
+                    $popup .= '<p><strong>Reporter:</strong> ' . e($rep->garden->user->name ?? 'N/A') . '</p>';
+                    $popup .= '<p>' . nl2br(e($rep->description)) . '</p>';
+                    if ($rep->photo) {
+                        $popup .= '<div class="popup-image">'
+                            . '<img src="' . asset('storage/' . $rep->photo)
+                            . '" alt="Report photo" />'
+                            . '</div>';
+                    }
+                    $popup .= '<div class="popup-actions">'
+                        . '<a href="' . admin_url("pests-and-disease-reports/{$rep->id}")
+                        . '" class="popup-link">View Details</a>'
+                        . '</div></div>';
+
+                    $markers[] = [
+                        'lat'   => (float) $rep->gps_lati,
+                        'long'  => (float) $rep->gps_longi,
+                        'popup' => $popup,
+                    ];
+                }
+
+                $column->append(view('maps.pest_reports_leaflet_map', [
+                    'markers' => $markers,
+                ]));
+            });
+        });
+
+        return $content;
+    }
+
     //function called gardens_map that will return a map of all gardens on map  
     // In your GardenController.php...
+
 
     public function gardens_map(Content $content)
     {

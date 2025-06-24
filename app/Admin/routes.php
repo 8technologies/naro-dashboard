@@ -14,6 +14,8 @@ Route::group([
 
     $router->get('/', 'HomeController@index')->name('home');
     $router->get('gardens-map', 'HomeController@gardens_map')->name('gardens_map');
+    $router->get('pests-map', 'HomeController@pests_map')->name('pests_map');
+    $router->get('providers-map', 'HomeController@providers_map')->name('providers_map');
     $router->get('questions', 'HomeController@questions')->name('questions');
     $router->get('question_answers/{id}', 'HomeController@answers')->name('question_answers');
     $router->resource('gens', GenController::class);

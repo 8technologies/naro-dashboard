@@ -3,6 +3,13 @@
 namespace App\Admin\Controllers;
 
 use App\Models\PestsAndDiseaseReport;
+use App\Models\PestsAndDisease;
+use App\Models\Garden;
+use App\Models\Crop;
+use App\Models\User;
+use App\Models\District;
+use App\Models\Subcounty;
+use App\Models\Parish;
 use App\Models\Utils;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
@@ -11,136 +18,105 @@ use Encore\Admin\Show;
 
 class PestsAndDiseaseReportController extends AdminController
 {
-    /**
-     * Title for current resource.
-     *
-     * @var string
-     */
     protected $title = 'Pests And Disease Reports';
 
-    /**
-     * Make a grid builder.
-     *
-     * @return Grid
-     */
     protected function grid()
     {
         $grid = new Grid(new PestsAndDiseaseReport());
-        $grid->model()->orderBy('id', 'desc');
-        $grid->column('id', __('Sn'))->sortable();
-        $grid->column('created_at', __('Date'))->sortable()
-            ->display(function ($created_at) {
-                return Utils::my_date($created_at);
-            });
-        $grid->column('pests_and_disease_id', __('Pests/Disease'))
-            ->display(function ($pests_and_disease_id) {
-                $pestsAndDisease = \App\Models\PestsAndDisease::find($pests_and_disease_id);
-                if ($pestsAndDisease == null) {
-                    return 'Unknown';
-                }
-                return $pestsAndDisease->category;
-            })->sortable();
-        $grid->column('garden_id', __('Garden'))
-            ->display(function ($garden_id) {
-                $garden = \App\Models\Garden::find($garden_id);
-                if ($garden == null) {
-                    return 'Unknown';
-                }
-                return $garden->name;
-            })->sortable(); 
-        $grid->column('crop_id', __('Crop'))
-            ->display(function ($crop_id) {
-                $crop = \App\Models\Crop::find($crop_id);
-                if ($crop == null) {
-                    return 'Unknown';
-                }
-                return $crop->name;
-            })->sortable(); 
-        $grid->column('user_id', __('User'))
-            ->display(function ($user_id) {
-                $user = \App\Models\User::find($user_id);
-                if ($user == null) {
-                    return 'Unknown';
-                }
-                return $user->name;
-            })->sortable(); 
-        $grid->column('district_id', __('District id'));
-        $grid->column('subcounty_id', __('Subcounty id'));
-        $grid->column('parish_id', __('Parish id'));
-        $grid->column('description', __('Description'));
-        $grid->column('photo', __('Photo'));
-        $grid->column('video', __('Video'));
-        $grid->column('expert_answer', __('Expert answer'));
-        $grid->column('expert_answer_photo', __('Expert answer photo'));
-        $grid->column('expert_answer_video', __('Expert answer video'));
-        $grid->column('expert_answer_audio', __('Expert answer audio'));
-        $grid->column('expert_answer_description', __('Expert answer description'));
-        $grid->column('gps_lati', __('Gps lati'));
-        $grid->column('gps_longi', __('Gps longi'));
+
+        // Eager load relationships for performance
+        $grid->model()->with(['pestsAndDisease', 'garden', 'crop', 'user', 'district', 'subcounty', 'parish'])
+                    ->orderBy('id', 'desc');
+
+        // Filters
+        $grid->filter(function (Grid\Filter $filter) {
+            $filter->disableIdFilter();
+            $filter->between('created_at', 'Date')->datetime();
+            $filter->equal('pests_and_disease_id', 'Pest/Disease')
+                   ->select(PestsAndDisease::pluck('category', 'id'));
+            $filter->equal('garden_id', 'Garden')
+                   ->select(Garden::pluck('name', 'id'));
+            $filter->equal('crop_id', 'Crop')
+                   ->select(Crop::pluck('name', 'id'));
+            $filter->equal('user_id', 'Reporter')
+                   ->select(User::pluck('name', 'id'));
+            $filter->equal('district_id', 'District')
+                   ->select(District::pluck('name', 'id'));
+        });
+
+        // Columns
+        $grid->column('id', 'Sn')->sortable();
+        $grid->column('created_at', 'Date')->sortable()
+             ->display(fn($dt) => Utils::my_date($dt));
+        $grid->column('pestsAndDisease.category', 'Pest/Disease')->sortable();
+        $grid->column('garden.name', 'Garden')->sortable();
+        $grid->column('crop.name', 'Crop')->sortable();
+        $grid->column('user.name', 'Reporter')->sortable();
+        $grid->column('district.name', 'District')->sortable();
+        $grid->column('subcounty.name', 'Subcounty')->sortable();
+        $grid->column('parish.name', 'Parish')->sortable();
+        $grid->column('description', 'Description')->limit(50);
+        $grid->column('photo', 'Photo')
+             ->lightbox(['width' => 100, 'height' => 100]);
+        $grid->column('gps_lati', 'Latitude');
+        $grid->column('gps_longi', 'Longitude');
 
         return $grid;
     }
 
-    /**
-     * Make a show builder.
-     *
-     * @param mixed $id
-     * @return Show
-     */
     protected function detail($id)
     {
         $show = new Show(PestsAndDiseaseReport::findOrFail($id));
+        $show->panel()->tools(fn($tools) => $tools->disableDelete()->disableEdit());
 
-        $show->field('id', __('Id'));
-        $show->field('created_at', __('Created at'));
-        $show->field('updated_at', __('Updated at'));
-        $show->field('pests_and_disease_id', __('Pests and disease id'));
-        $show->field('garden_id', __('Garden id'));
-        $show->field('crop_id', __('Crop id'));
-        $show->field('user_id', __('User id'));
-        $show->field('district_id', __('District id'));
-        $show->field('subcounty_id', __('Subcounty id'));
-        $show->field('parish_id', __('Parish id'));
-        $show->field('description', __('Description'));
-        $show->field('photo', __('Photo'));
-        $show->field('video', __('Video'));
-        $show->field('expert_answer', __('Expert answer'));
-        $show->field('expert_answer_photo', __('Expert answer photo'));
-        $show->field('expert_answer_video', __('Expert answer video'));
-        $show->field('expert_answer_audio', __('Expert answer audio'));
-        $show->field('expert_answer_description', __('Expert answer description'));
-        $show->field('gps_lati', __('Gps lati'));
-        $show->field('gps_longi', __('Gps longi'));
+        $show->field('id', 'ID');
+        $show->field('created_at', 'Reported On')
+             ->as(fn($dt) => Utils::my_date($dt));
+        $show->field('pests_and_disease_id', 'Pest/Disease')
+             ->as(fn($id) => optional(PestsAndDisease::find($id))->category);
+        $show->field('garden_id', 'Garden')
+             ->as(fn($id) => optional(Garden::find($id))->name);
+        $show->field('crop_id', 'Crop')
+             ->as(fn($id) => optional(Crop::find($id))->name);
+        $show->field('user_id', 'Reporter')
+             ->as(fn($id) => optional(User::find($id))->name);
+        $show->field('description', 'Description');
+        $show->field('photo', 'Photo')
+             ->as(fn($photo) => $photo ? '<img src="'.asset('storage/'.$photo).'" width="200"/>' : 'None')
+             ->unescape();
+        $show->field('gps_lati', 'Latitude');
+        $show->field('gps_longi', 'Longitude');
 
         return $show;
     }
 
-    /**
-     * Make a form builder.
-     *
-     * @return Form
-     */
     protected function form()
     {
         $form = new Form(new PestsAndDiseaseReport());
 
-        $form->number('pests_and_disease_id', __('Pests and disease id'));
-        $form->number('garden_id', __('Garden id'));
-        $form->number('crop_id', __('Crop id'));
-        $form->number('user_id', __('User id'));
-        $form->number('district_id', __('District id'));
-        $form->number('subcounty_id', __('Subcounty id'));
-        $form->number('parish_id', __('Parish id'));
-        $form->textarea('description', __('Description'));
-        $form->textarea('photo', __('Photo'));
-        $form->textarea('video', __('Video'));
-        $form->textarea('expert_answer', __('Expert answer'));
-        $form->textarea('expert_answer_photo', __('Expert answer photo'));
-        $form->textarea('expert_answer_video', __('Expert answer video'));
-        $form->textarea('expert_answer_audio', __('Expert answer audio'));
-        $form->textarea('expert_answer_description', __('Expert answer description'));
-        $form->textarea('gps_lati', __('Gps lati'));
-        $form->textarea('gps_longi', __('Gps longi'));
+        $form->select('pests_and_disease_id', 'Pest/Disease')
+             ->options(PestsAndDisease::pluck('category', 'id'))
+             ->rules('required');
+        $form->select('garden_id', 'Garden')
+             ->options(Garden::pluck('name', 'id'))
+             ->rules('required');
+        $form->select('crop_id', 'Crop')
+             ->options(Crop::pluck('name', 'id'))
+             ->rules('required');
+        $form->select('user_id', 'Reporter')
+             ->options(User::pluck('name', 'id'))
+             ->rules('required');
+        $form->select('district_id', 'District')
+             ->options(District::pluck('name', 'id'));
+        $form->select('subcounty_id', 'Subcounty')
+             ->options(Subcounty::pluck('name', 'id'));
+        $form->select('parish_id', 'Parish')
+             ->options(Parish::pluck('name', 'id'));
+
+        $form->textarea('description', 'Description')->rows(3);
+        $form->image('photo', 'Photo');
+        $form->decimal('gps_lati', 'GPS Latitude', 10, 6);
+        $form->decimal('gps_longi', 'GPS Longitude', 10, 6);
 
         return $form;
     }

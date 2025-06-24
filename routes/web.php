@@ -14,6 +14,9 @@ use App\Models\District;
 use App\Models\Farmer;
 use App\Models\Garden;
 use App\Models\GardenActivity;
+use App\Models\Parish;
+use App\Models\PestsAndDisease;
+use App\Models\PestsAndDiseaseReport;
 use App\Models\ServiceProvider;
 use App\Models\Subcounty;
 use App\Models\User;
@@ -126,6 +129,264 @@ Route::get('create-dummy', function () {
 
     echo "<h2>...Garden activity seeding process completed!</h2>";
 });
+
+
+
+// Route to generate 100 realistic, Uganda-based dummy service providers without Faker
+Route::get('create-dummy-service-providers', function () {
+    // Reference data
+    $pIds = PestsAndDisease::pluck('id')->toArray();
+    $gIds = range(1, 150);
+    $cIds = Crop::pluck('id')->toArray();
+    $uIds = User::pluck('id')->toArray();
+    $dIds = District::pluck('id')->toArray();
+    $sIds = Subcounty::pluck('id')->toArray();
+    $pIdsLoc = Parish::pluck('id')->toArray();
+
+    for ($i = 0; $i < 400; $i++) {
+        $r = new PestsAndDiseaseReport();
+        // Random picks
+        $r->pests_and_disease_id = $pIds[array_rand($pIds)];
+        $r->garden_id             = $gIds[array_rand($gIds)];
+        $r->crop_id               = $cIds[array_rand($cIds)];
+        $r->user_id               = $uIds[array_rand($uIds)];
+        $r->district_id           = $dIds[array_rand($dIds)];
+        $r->subcounty_id          = $sIds[array_rand($sIds)];
+        $r->parish_id             = $pIdsLoc[array_rand($pIdsLoc)];
+
+        // Description and photo
+        $cat = PestsAndDisease::find($r->pests_and_disease_id)->category;
+        $r->description = "Observation of {$cat} in groundnut garden, moderate severity.";
+        $r->photo       = 'images/pest_disease_' . rand(1, 5) . '.jpg';
+
+        // GPS within Uganda
+        $r->gps_lati  = rand(1500000, 4500000) / 1000000;
+        $r->gps_longi = rand(29500000, 35000000) / 1000000;
+
+        // Random timestamp in past year
+        $dt = Carbon::now()->subDays(rand(0, 365));
+        $r->created_at = $dt;
+        $r->updated_at = $dt;
+
+        $r->save();
+    }
+
+    die();
+
+    $pests = [
+        'Groundnut Rosette Virus',
+        'Late Leaf Spot',
+        'Early Leaf Spot',
+        'Rust Fungus',
+        'Aphids',
+        'Thrips',
+        'Termites',
+        'Nematodes',
+        'Root Rot',
+        'Collar Rot'
+    ];
+
+    // Matching descriptions
+    $descriptions = [
+        'Causes yellow mosaic and stunted growth, transmitted by aphids.',
+        'Brown necrotic spots on leaves, reducing photosynthesis.',
+        'Circular lesions with gray centers, leading to defoliation.',
+        'Orange-brown pustules on leaves and stems.',
+        'Small sap-sucking insects causing leaf curling.',
+        'Tiny insects feeding on flowers and young pods.',
+        'Causes seedling death and hollow stems.',
+        'Microscopic worms attacking root hairs, stunting plant.',
+        'Water-soaked lesions on roots, wilting plants.',
+        'Decay at stem base, leading to collapse.'
+    ];
+
+    // Placeholder image IDs
+    $images = range(1, 5);
+
+    // Seed 10 records
+    //truncate the table first
+    for ($i = 1; $i <= 10; $i++) {
+        $idx = array_rand($pests);
+
+        // Find existing or new
+        $entry = PestsAndDisease::find($i) ?: new PestsAndDisease();
+        $entry->id          = $i;  // ensure a unique slot
+        $entry->category    = $pests[$idx];
+        $entry->description = $descriptions[$idx];
+        $entry->photo       = 'images/pest_disease_' . rand(1, 5) . '.jpg'; // Random image from 1 to 5 
+        $entry->save();
+    }
+
+    // Array of ten groundnut pests & diseases
+    $pests = [
+        'Groundnut Rosette Virus',
+        'Late Leaf Spot',
+        'Early Leaf Spot',
+        'Rust Fungus',
+        'Aphids',
+        'Thrips',
+        'Termites',
+        'Nematodes',
+        'Root Rot',
+        'Collar Rot'
+    ];
+
+    // Corresponding concise descriptions
+    $descriptions = [
+        'Yellow mosaic and stunted growth transmitted by aphids.',
+        'Brown necrotic spots reducing photosynthesis.',
+        'Gray-centered lesions causing leaf drop.',
+        'Orange-brown pustules on foliage.',
+        'Small sap-sucking insects causing leaf curling.',
+        'Fringe feeding on flowers and pods.',
+        'Soil insects causing wilting and hollow stems.',
+        'Microscopic worms attacking roots, stunting plants.',
+        'Water-soaked root lesions leading to collapse.',
+        'Decay at stem collar resulting in plant death.'
+    ];
+
+    // Use placeholder images 1–5
+    $images = range(1, 5);
+
+    for ($i = 1; $i <= 10; $i++) {
+        $idx = $i - 1;
+        $entry = PestsAndDisease::find($i) ?: new PestsAndDisease();
+        $entry->id          = $i;
+        $entry->category    = $pests[$idx];
+        $entry->description = $descriptions[$idx];
+        $entry->photo       = 'images/pest_disease_' . $images[array_rand($images)] . '.jpg';
+        $entry->save();
+    }
+
+    die('10 groundnut pests & diseases created!');
+
+    die();
+    // Arrays of sample data
+    $firstNames = [
+        'John',
+        'Grace',
+        'David',
+        'Mercy',
+        'Robert',
+        'Anita',
+        'Paul',
+        'Ruth',
+        'Michael',
+        'Sandra'
+    ];
+    $lastNames = [
+        'Okello',
+        'Nabudere',
+        'Tumusiime',
+        'Kato',
+        'Kintu',
+        'Namara',
+        'Ssekandi',
+        'Mugisha',
+        'Nakimuli',
+        'Ochieng'
+    ];
+    $businessNames = [
+        'AgroCare Services',
+        'GreenFields Ltd',
+        'FarmTech Uganda',
+        'Harvest Helpers',
+        'AgriLink Solutions',
+        'SoilCare Experts',
+        'IrrigaPro Services',
+        'EcoFarm Supplies',
+        'SafeHarvest Uganda',
+        'CropGuard Ltd'
+    ];
+    $districts = [
+        'Kampala',
+        'Jinja',
+        'Gulu',
+        'Mbale',
+        'Mbarara',
+        'Lira',
+        'Fort Portal',
+        'Mukono',
+        'Masaka',
+        'Soroti'
+    ];
+    $services = [
+        'Soil testing and analysis',
+        'Mechanized ploughing and tilling',
+        'Pest and disease scouting',
+        'Irrigation installation',
+        'Certified seed distribution',
+        'Equipment rental',
+        'Post-harvest storage solutions',
+        'Market linkage',
+        'Extension training',
+        'Organic fertilizer supply'
+    ];
+    $prefixes = ['070', '071', '075', '076', '077', '078', '079'];
+
+    for ($i = 1; $i <= 100; $i++) {
+        // Pick random name components
+        $first = $firstNames[array_rand($firstNames)];
+        $last  = $lastNames[array_rand($lastNames)];
+        $providerName = "{$first} {$last}";
+
+        // Business name and details
+        $bizName  = $businessNames[array_rand($businessNames)];
+        $district = $districts[array_rand($districts)];
+        $poBox    = 'P.O. Box ' . rand(100, 999);
+        $details  = "Based in {$district}, Uganda. {$poBox}, {$district}.";
+
+        // Services offered: pick 1–3 random
+        shuffle($services);
+        $offered = implode(', ', array_slice($services, 0, rand(1, 3)));
+
+        // GPS coordinates within Uganda bounds
+        $gpsLat  = rand(1500000, 4500000) / 1000000;   // 1.500000 to 4.500000
+        $gpsLong = rand(29500000, 35000000) / 1000000; // 29.500000 to 35.000000
+
+        // Phone numbers
+        $prefix     = $prefixes[array_rand($prefixes)];
+        $subscriber = str_pad(rand(0, 9999999), 7, '0', STR_PAD_LEFT);
+        $phone1     = '+256' . substr($prefix, 1) . $subscriber;
+
+        // 40% chance of second number
+        if (rand(1, 100) <= 40) {
+            $prefix2     = $prefixes[array_rand($prefixes)];
+            $subscriber2 = str_pad(rand(0, 9999999), 7, '0', STR_PAD_LEFT);
+            $phone2      = '+256' . substr($prefix2, 1) . $subscriber2;
+        } else {
+            $phone2 = null;
+        }
+
+        // Random email
+        $emailUser = strtolower($first) . '.' . strtolower($last) . rand(1, 99);
+        $email     = "{$emailUser}@example.com";
+        $sp = ServiceProvider::find($i);
+
+        // Instantiate and assign one by one
+        if ($sp == null) {
+            $sp = new ServiceProvider();
+        } else {
+        }
+        $sp->id              = $i; // Ensure unique ID
+        $sp->provider_name    = $providerName;
+        $sp->business_name    = $bizName;
+        $sp->details          = $details;
+        $sp->services_offered = $offered;
+        $sp->gps_lat          = $gpsLat;
+        $sp->gps_long         = $gpsLong;
+        $sp->photo            = 'images/service_provider_' . rand(1, 5) . '.jpg';
+        $sp->phone_number     = $phone1;
+        $sp->phone_number_2   = $phone2;
+        $sp->email            = $email;
+        $sp->save();
+
+        echo "Created #{$i}: {$providerName} ({$bizName})<br>";
+    }
+
+    dd('Successfully created 100 dummy service providers.');
+});
+
 
 
 Route::get('import-data', function () {

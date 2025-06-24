@@ -45,5 +45,29 @@ class PestsAndDiseaseReport extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    //belongs to parish_id
+    public function parish()
+    {
+        return $this->belongsTo(Parish::class);
+    }
+
+    //subcounty
+    public function subcounty()
+    {
+        return $this->belongsTo(Subcounty::class);
+    }
+
+    //crop
+    public function crop()
+    {
+        return $this->belongsTo(Crop::class);
+    }
+
+    //garden
+    public function garden()
+    {
+        return $this->belongsTo(Garden::class);
     } 
 }

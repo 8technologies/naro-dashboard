@@ -45,22 +45,23 @@ class ServiceProviderController extends AdminController
         // Columns
         $grid->column('provider_name', __('Provider Name'))->sortable();
         $grid->column('business_name', __('Business Name'))->sortable();
-        $grid->column('services_offered', __('Services Offered'))->label();
+        $grid->column('services_offered', __('Services Offered'))
+             ->display(function ($tags) {
+                return explode(', ', $tags);
+            })->label()
+            ->sortable();
         $grid->column('photo', __('Photo'))
             ->lightbox(['width' => 100, 'height' => 100])
             ->sortable();
 
-        $grid->column('gps_lat', __('Latitude'))
+        $grid->column('gps_lat', __('GPS'))
             ->display(function ($lat) {
-                return number_format($lat, 6);
-            });
-        $grid->column('gps_long', __('Longitude'))
-            ->display(function ($lng) {
-                return number_format($lng, 6);
-            });
-        $grid->column('phone_number', __('Phone'))->sortable();
-        $grid->column('phone_number_2', __('Alt Phone'));
-        $grid->column('email', __('Email'));
+                // BOTTH latitude and longitude are displayed in the same column
+                return number_format($lat, 6) . ', ' . number_format($this->gps_long, 6);
+            })->sortable();  
+        $grid->column('phone_number', __('Contact'))->sortable();
+        $grid->column('phone_number_2', __('Alt Phone'))->hide();
+        $grid->column('email', __('Email'))->hide();
 
         // Hide verbose fields by default
         $grid->column('details', __('Details'))->hide();
