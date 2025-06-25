@@ -5,22 +5,23 @@
         border-left: 9px solid transparent;
         border-radius: 0rem;
         border-top: #ff0000 5px solid !important;
-    }
+    }   
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<div class="card  mb-4 mb-md-5 border-0 my-card-3" style="color: black;">
-    <!--begin::Header-->
-    <div class="d-flex justify-content-between px-3 pt-2 px-md-4 border-bottom">
-        <h4 style="line-height: 1; margrin: 0; " class="fs-22 fw-800">
-            Gardens by Varieties
-        </h4>
+<div class="card mb-3" style="">
+
+      <div class="d-flex justify-content-between p-2 px-4 pt-3 border-bottom ">
+        <h4 class="fs-22 fw-800 mb-0">     Gardens by Varieties</h4>
+        <a href="{{ admin_url('gardens') }}" class="btn btn-link text-primary fw-600 text-decoration-underline">
+            View All Gardens <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
-    <div class="card-body py-2 py-md-3">
-        <div style="width: 80%; margin: auto;">
+ 
+    <div class="card-body py-3 mb-3 ">
+        <div style="display: flex; justify-content: center; align-items: center; height: 400px; margin: auto;">
+            {{-- Chart.js canvas --}}
             <canvas id="gardens-by-varieties"></canvas>
         </div>
-        {{-- view all --}}
-        <a href="{{ admin_url('gardens') }}" class="btn btn-primary btn-sm mt-3">View all gardens</a>
     </div>
 </div>
 
@@ -32,7 +33,7 @@
 
 
     new Chart(document.getElementById('gardens-by-varieties').getContext('2d'), {
-        type: 'pie',
+        type: 'doughnut',
         data: {
             labels: JSON.parse('<?php echo json_encode($lables); ?>'),
             datasets: [{

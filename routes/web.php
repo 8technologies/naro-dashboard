@@ -12,21 +12,130 @@ use App\Http\Controllers\PestAndDiseaseController;
 use App\Models\Crop;
 use App\Models\District;
 use App\Models\Farmer;
+use App\Models\FinancialRecord;
 use App\Models\Garden;
 use App\Models\GardenActivity;
 use App\Models\Parish;
 use App\Models\PestsAndDisease;
 use App\Models\PestsAndDiseaseReport;
+use App\Models\Product;
 use App\Models\ServiceProvider;
 use App\Models\Subcounty;
 use App\Models\User;
 use App\Models\Utils;
+use Encore\Admin\Auth\Database\Administrator;
 use Encore\Admin\Facades\Admin;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
+Route::get('create-fin', function () {
+
+    // Prepare data pools
+    $names = [
+        'Groundnut Oil Extraction Kit',
+        'Organic Fertilizer Pack',
+        'Handheld Pesticide Sprayer',
+        'Mobile Soil Testing Service',
+        'AgriLink Market Access',
+        'CropGuard Disease Scanner',
+        'Harvesting Labor Service',
+        'IrrigaPro Drip Kit',
+        'Seed Storage Bags',
+        'Farm Equipment Rental',
+        'Premium Groundnut Seeds',
+        'Post-Harvest Drying Rack',
+        'Mechanized Plough Hire',
+        'Extension Training Session',
+        'Soil pH Test Kit',
+        'Biodegradable Mulch Film',
+        'Water Pump Rental',
+        'Mobile Money Payment Service',
+        'Organic Pesticide Solution',
+        'Farm Management Software',
+        'AgriConsult Advisory Service',
+        'Groundnut Grading Service',
+        'Packaging and Labeling',
+        'Custom Harvest Service',
+        'Crop Rotation Plan',
+        'Irrigation Maintenance',
+        'Drone Field Survey',
+        'Cold Storage Access',
+        'Transportation Logistics',
+        'Soil Amendment Consultation',
+        'Quality Assurance Inspection',
+        'Groundnut Meal Production',
+        'Farm Insurance Package',
+        'Mobile App Development',
+        'Market Price Alert Service',
+        'Farm Branding Package',
+        'Seed Certification Service',
+        'Harvest Forecast Tool',
+        'Solar-Powered Irrigation',
+        'Fertilizer Blending',
+        'Farm Waste Composting',
+        'Groundnut Shelling Service',
+        'Wholesale Groundnut Supply',
+        'Pest Monitoring Station',
+        'Custom Soil Blend',
+        'Training Materials Printing',
+        'Mobile Workshop Rental',
+        'Agrochemical Delivery',
+        'Market Linkage Service'
+    ];
+
+    $details = [
+        'High-quality, field-tested product for improved yields.',
+        'Certified organic and locally sourced.',
+        'Easy to use, durable and maintenance-free.',
+        'Includes delivery and installation where applicable.',
+        'Expert support and after-sales service.',
+        'Customizable to your farm size and needs.',
+        'Cost-effective solutions for smallholder farmers.',
+        'Compliant with local agricultural standards.',
+        'Suitable for all soil types and climates.',
+        'Eco-friendly and safe for operators.'
+    ];
+
+    $types = ['Product', 'Service'];
+    $states = ['New', 'Used but like new', 'Used'];
+    $offerTypes = ['For sale', 'For hire'];
+
+    // Retrieve subcounty and admin IDs
+    $subcountyIds = Subcounty::pluck('id')->toArray();
+    $adminIds     = Administrator::pluck('id')->toArray();
+
+    // Begin transaction
+    DB::beginTransaction();
+    try {
+        for ($i = 0; $i < 50; $i++) {
+            $p = new Product();
+
+            // Random assignment
+            $nameKey       = array_rand($names);
+            $p->name       = $names[$nameKey];
+            $p->details    = $details[array_rand($details)];
+            $p->type       = $types[array_rand($types)];
+            $p->state      = $states[array_rand($states)];
+            $p->offer_type = $offerTypes[array_rand($offerTypes)];
+            $p->price      = rand(50000, 500000);  // Price in UGX
+            $p->photo      = 'images/product_' . rand(1, 10) . '.jpg';
+            $p->administrator_id = $adminIds[array_rand($adminIds)];
+            $p->subcounty_id     = $subcountyIds[array_rand($subcountyIds)];
+
+            $p->save();
+        }
+
+        DB::commit();
+        admin_toastr('50 dummy products/services generated successfully!', 'success');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        admin_toastr('Error generating dummy products: ' . $e->getMessage(), 'error');
+    }
+
+    dd('Successfully generated 400 dummy financial records.');
+});
 Route::get('create-dummy', function () {
     // --- Data Configuration for Realistic Activities ---
 

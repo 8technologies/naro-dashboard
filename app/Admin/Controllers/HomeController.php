@@ -249,35 +249,6 @@ class HomeController extends Controller
 
     public function index(Content $content)
     {
-        /* 
-        foreach (FinancialRecord::all() as $key => $val) {
-            $now = Carbon::now();
-            //random date between 5 months ago and now
-            $random_date = $now->copy()->subMonths(rand(0, 5))->startOfMonth();
-            $random_date = $random_date->addDays(rand(0, 30));
-            $val->created_at = $random_date;
-            $val->updated_at = $random_date;
-            // $val->amount = rand(1000, 10000);
-            //rand negative or positive
-            $val->amount = rand(0, 1) == 0 ? -$val->amount : $val->amount; 
-            $val->save();
-        }
-   
-            "created_at" => "2024-02-18 08:41:36"
-    "updated_at" => "2024-02-18 08:41:36"
-    "id" => 1
-    "garden_id" => 5
-    "user_id" => 1
-    "category" => "Income"
-    "amount" => "10000"
-    "payment_method" => "Cash"
-    "recipient" => "images/1708245696_61182.jpg"
-    "description" => "Some details"
-    "receipt" => null
-    "date" => "2024-02-13"
-    "quantity" => "1"
-    die();
-        */
 
         //return $content;
         $u = Auth::user();
@@ -329,15 +300,13 @@ class HomeController extends Controller
                 ]));
             });
         });
-        $content->row(function (Row $row) {
-            $row->column(3, function (Column $column) {
-                $pests = PestsAndDiseaseReport::where([])->orderBy('created_at', 'desc')->limit(5)->get();
-                $column->append(view('widgets.pests-2', [
-                    'data' => $pests,
-                ]));
-            });
 
-            $row->column(3, function (Column $column) {
+
+        $content->row(function (Row $row) {
+
+
+
+            $row->column(6, function (Column $column) {
                 $top_pests = Garden::selectRaw('count(*) as count, crop_id')
                     ->groupBy('crop_id')
                     ->orderBy('count', 'desc')
@@ -361,7 +330,81 @@ class HomeController extends Controller
                 ]));
             });
 
-            $row->column(3, function (Column $column) {
+
+            // Recently registered gardens
+            $row->column(6, function (Column $column) {
+                $gardens = 
+                Garden::orderBy('created_at', 'desc')->limit(200)
+                    ->with('user', 'district')
+                    ->get();
+
+                $gardens_data = [];
+                foreach ($gardens as $garden) {
+                    if (empty($garden->gps_lati) || empty($garden->gps_longi)) {
+                        continue;
+                    }
+
+                    $popup  = '<div class="report-popup">';
+                    $popup .= '<h3>' . e($garden->name) . '</h3>';
+                    $popup .= '<p><strong>Crop:</strong> ' . e($garden->crop_text) . '</p>';
+                    $popup .= '<p><strong>District:</strong> ' . e($garden->district->name ?? 'N/A') . '</p>';
+                    $popup .= '<p><strong>Owner:</strong> ' . e($garden->user->name ?? 'N/A') . '</p>';
+                    $popup .= '</div>';
+
+                    $gardens_data[] = [
+                        'lat'   => (float) $garden->gps_lati,
+                        'long'  => (float) $garden->gps_longi,
+                        'popup' => $popup,
+                    ];
+                }
+
+                $column->append(view('maps.recent_gardens_leaflet_map', [
+                    'gardens' => $gardens_data,
+                ]));
+            });
+        });
+
+        $content->row(function (Row $row) {
+
+
+            // Pest reports from last 30 days
+            $row->column(6, function (Column $column) {
+                $reports = PestsAndDiseaseReport::where('created_at', '>=', Carbon::now()->subDays(30))
+                    ->with(['pestsAndDisease', 'garden.user', 'garden.district'])
+                    ->get();
+
+                $markers = [];
+                foreach ($reports as $rep) {
+                    if (empty($rep->gps_lati) || empty($rep->gps_longi)) {
+                        continue;
+                    }
+
+                    $popup  = '<div class="report-popup">';
+                    $popup .= '<h3>' . e($rep->pestsAndDisease->category ?? 'Unknown') . '</h3>';
+                    $popup .= '<p><strong>Date:</strong> ' . e(Utils::my_date($rep->created_at)) . '</p>';
+                    $popup .= '<p><strong>Garden:</strong> ' . e($rep->garden->name ?? 'N/A') . '</p>';
+                    $popup .= '</div>';
+
+                    $markers[] = [
+                        'lat'   => (float) $rep->gps_lati,
+                        'long'  => (float) $rep->gps_longi,
+                        'popup' => $popup,
+                    ];
+                }
+
+                $column->append(view('maps.recent_pests_leaflet_map', [
+                    'markers' => $markers,
+                ]));
+            });
+
+            $row->column(6, function (Column $column) {
+                $pests = PestsAndDiseaseReport::where([])->orderBy('created_at', 'desc')->limit(6)->get();
+                $column->append(view('widgets.pests-2', [
+                    'data' => $pests,
+                ]));
+            });
+
+            $row->column(6, function (Column $column) {
                 $pests = PestsAndDiseaseReport::where([])->orderBy('created_at', 'desc')->limit(5)->get();
 
                 //get pests count order by top district_id count
@@ -385,7 +428,7 @@ class HomeController extends Controller
                 ]));
             });
 
-            $row->column(3, function (Column $column) {
+            $row->column(6, function (Column $column) {
                 $now = Carbon::now();
                 //LAST 4 MONTHS
                 $last_4_months = [];

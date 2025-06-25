@@ -41,4 +41,12 @@ class FinancialRecord extends Model
         }
         return $this->garden->name;
     }
+
+    //belongs to user
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    //
 }

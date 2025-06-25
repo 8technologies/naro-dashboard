@@ -4,12 +4,13 @@ namespace App\Admin\Controllers;
 
 use App\Models\Location;
 use App\Models\Product;
-use App\Models\Utils;
-use Encore\Admin\Auth\Database\Administrator;
+use App\Models\Subcounty;
 use Encore\Admin\Controllers\AdminController;
 use Encore\Admin\Form;
 use Encore\Admin\Grid;
 use Encore\Admin\Show;
+use Encore\Admin\Facades\Admin;
+use Encore\Admin\Auth\Database\Administrator;
 use Illuminate\Support\Facades\Auth;
 
 class ProductController extends AdminController
@@ -30,27 +31,37 @@ class ProductController extends AdminController
     {
         $grid = new Grid(new Product());
 
-        //disable filter
+        // Disable filter/column selector to simplify UI
         $grid->disableFilter();
-
-        //diable the column selector
         $grid->disableColumnSelector();
-        
-     
-        $grid->quickSearch('name')->placeholder('Search by name');
-        $grid->column('photo', __('Photo'))
-            ->display(function ($avatar) {
-                $img = url("storage/" . $avatar);
-                return '<img class="img-fluid " style="border-radius: 10px;"  src="' . $img . '" >';
-            })
-            ->width(80)
-            ->sortable();
-        $grid->column('name', __('Product Name'));
-        $grid->column('price', __('Price'));
-        $grid->column('state', __('State'));
-        $grid->column('category', __('Category'));
-  
-      
+
+        // Quick search
+        $grid->quickSearch('name')->placeholder('Search by name or details');
+
+        // Columns
+        $grid->column('photo', 'Photo')
+             ->lightbox(['width' => 80, 'height' => 80])
+             ->sortable();
+        $grid->column('name', 'Name')->sortable();
+        $grid->column('type', 'Type')->sortable()
+             ->label(['Product' => 'primary', 'Service' => 'info']);
+        $grid->column('state', 'Condition')->sortable()
+             ->label(['New' => 'success', 'Used but like new' => 'warning', 'Used' => 'default']);
+        $grid->column('offer_type', 'Offer')->sortable()
+             ->label(['For sale' => 'success', 'For hire' => 'warning']);
+        $grid->column('price', 'Price')->sortable()->display(function ($price) {
+            return 'UGX ' . number_format($price);
+        });
+        $grid->column('administrator_id', 'Provider')->sortable()->display(function ($id) {
+            $admin = Administrator::find($id);
+            return $admin ? $admin->name : 'Unknown';
+        });
+        $grid->column('subcounty_id', 'Location')->sortable()->display(function ($id) {
+            $loc = Subcounty::find($id);
+            return $loc ? $loc->name : 'N/A';
+        });
+        $grid->column('details', 'Details')->limit(50);
+
         return $grid;
     }
 
@@ -64,21 +75,23 @@ class ProductController extends AdminController
     {
         $show = new Show(Product::findOrFail($id));
 
-        $show->field('administrator_id', __('Administrator id'))->as(function ($id) {
-            $a = Administrator::find($id);
-            if ($a) {
-                return  $a->name;
-            }
+        $show->field('photo', 'Photo')->lightbox(['width' => 200, 'height' => 200]);
+        $show->field('name', 'Name');
+        $show->field('type', 'Type');
+        $show->field('state', 'Condition');
+        $show->field('offer_type', 'Offer Type');
+        $show->field('price', 'Price')->as(function ($price) {
+            return 'UGX ' . number_format($price);
         });
-        $show->field('name', __('Name'));
-        $show->field('type', __('Type'));
-        $show->field('photo', __('Photo'))->image();
-        $show->field('details', __('Details'));
-        $show->field('price', __('Price'));
-        $show->field('offer_type', __('Offer type'));
-        $show->field('state', __('State'));
-        $show->field('category', __('Category'));
-     
+        $show->field('administrator_id', 'Provider')->as(function ($id) {
+            $admin = Administrator::find($id);
+            return $admin ? $admin->name : 'Unknown';
+        });
+        $show->field('subcounty_id', 'Location')->as(function ($id) {
+            $loc = Location::find($id);
+            return $loc ? $loc->name : 'N/A';
+        });
+        $show->field('details', 'Details')->unescape();
 
         return $show;
     }
@@ -92,57 +105,42 @@ class ProductController extends AdminController
     {
         $form = new Form(new Product());
 
-        if (
-            (Auth::user()->isRole('staff')) ||
-            (Auth::user()->isRole('admin'))
-        ) {
-
-            $ajax_url = url(
-                '/api/ajax?'
-                    . "search_by_1=name"
-                    . "&search_by_2=id"
-                    . "&model=User"
-            );
-            $form->select('administrator_id', "Product provider")
-                ->options(function ($id) {
-                    $a = Administrator::find($id);
-                    if ($a) {
-                        return [$a->id => "#" . $a->id . " - " . $a->name];
-                    }
-                })
-                ->ajax($ajax_url)->rules('required');
+        // Provider selection with AJAX for staff/admin, readonly otherwise
+        if (Admin::user()->isRole('staff') || Admin::user()->isRole('admin')) {
+            $ajaxUrl = url('/api/ajax?search_by_1=name&search_by_2=id&model=Administrator');
+            $form->select('administrator_id', 'Provider')
+                 ->ajax($ajaxUrl)
+                 ->rules('required');
         } else {
-            $form->select('administrator_id', __('Product provider'))
-                ->options(Administrator::where('id', Auth::user()->id)->get()->pluck('name', 'id'))->default(Auth::user()->id)->readOnly()->rules('required');
+            $form->select('administrator_id', 'Provider')
+                 ->options([Auth::user()->id => Auth::user()->name])
+                 ->default(Auth::user()->id)
+                 ->readOnly()
+                 ->rules('required');
         }
 
-
-        $form->radio('type', __('Item type'))->options([
-            'Product' => 'Product',
-            'Service' => 'Service',
-        ])->rules('required');
-
-        $form->text('name', __('Item name'))->rules('required');
-        $form->image('photo', __('Photo'))->rules('required');
-
-        $form->radio('state', __('Item State'))->options([
-            'New' => 'New',
-            'Used but like new' => 'Used but like new',
-            'Used' => 'Used',
-        ])->rules('required');
-
-        $form->radio('offer_type', __('Offer type'))->options([
-            'For sale' => 'For sale',
-            'For hire' => 'For hire/Rent',
-        ])->rules('required');
-
-        $form->decimal('price', __('Price (in UGX)'))->rules('required');
-
-        $form->text('subcounty_id', __('Location'))
-            ->rules('required');
-
-
-        $form->text('details', __('Details'))->rules('required');
+        $form->radio('type', 'Item Type')
+             ->options(['Product' => 'Product', 'Service' => 'Service'])
+             ->rules('required');
+        $form->text('name', 'Name')
+             ->rules('required|max:255');
+        $form->image('photo', 'Photo')
+             ->uniqueName()
+             ->rules('required|image');
+        $form->radio('state', 'Condition')
+             ->options(['New' => 'New', 'Used but like new' => 'Used but like new', 'Used' => 'Used'])
+             ->rules('required');
+        $form->radio('offer_type', 'Offer Type')
+             ->options(['For sale' => 'For sale', 'For hire' => 'For hire'])
+             ->rules('required');
+        $form->currency('price', 'Price (UGX)')
+             ->symbol('UGX')
+             ->rules('required|numeric|min:0');
+        $form->select('subcounty_id', 'Location')
+             ->options(Subcounty::pluck('name', 'id'))
+             ->rules('required');
+        $form->textarea('details', 'Details')
+             ->rules('required|max:500');
 
         return $form;
     }

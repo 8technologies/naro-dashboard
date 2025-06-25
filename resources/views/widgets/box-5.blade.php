@@ -36,7 +36,7 @@ if ($style == 'danger') {
         border-radius: 0rem;
     }
 </style>
-<a href="{{ $link }}" class="card {{ $bg }} {{ $border }} mb-4 mb-md-5 my-card">
+<a href="{{ $link }}" class="card {{ $bg }} {{ $border }} mb-3 mb-md-4 my-card">
     <div class="card-body py-0 py-0">
         <p class="h4  text-bold mb-2 mb-md-3 p-0 mt-3 m-0 {{ $text }} ">{{ $title }}</p>
 

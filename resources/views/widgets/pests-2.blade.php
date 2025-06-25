@@ -14,7 +14,7 @@
     .my-card-2:hover h4 {
         color: #000 !important;
     }
-</style><a class="card  mb-4 mb-md-5 border-0 my-card-2" href="{{ admin_url('pests-and-diseases') }}" title="View all reports"
+</style><a class="card  mb-4 mb-md-5 border-0 my-card-2" href="{{ admin_url('pests-and-disease-reports') }}" title="View all reports"
     style="color: black;">
     <!--begin::Header-->
     <div class="d-flex justify-content-between px-3 pt-2 pb-2 px-md-4 border-bottom">
